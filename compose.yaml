@@ -1,0 +1,121 @@
+name: administrator-ai
+
+x-app: &app
+  build:
+    context: .
+    args:
+      REQUIREMENTS: requirements-dev.txt
+  volumes:
+    - .:/app
+
+x-runtime-env: &runtime-env
+  DJANGO_SETTINGS_MODULE: config.settings.dev
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set in .env}
+  DB_HOST: db
+  DB_NAME: administrator_ai
+  DB_USER: aai_app
+  DB_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
+  REDIS_URL: redis://redis:6379/0
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.6-pg18
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+    volumes:
+      # PostgreSQL 18 images keep versioned data under this parent directory.
+      - db_data:/var/lib/postgresql
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 768m
+
+  dbinit:
+    image: pgvector/pgvector:0.8.6-pg18
+    command: ["sh", "/ops/db/init.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      AAI_OWNER_PASSWORD: ${AAI_OWNER_PASSWORD:?set in .env}
+      AAI_APP_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
+      AAI_PLATFORM_PASSWORD: ${AAI_PLATFORM_PASSWORD:?set in .env}
+      AAI_OWNER_CREATEDB: "true"
+    volumes:
+      - ./ops/db:/ops/db:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  migrate:
+    <<: *app
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.migrate
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set in .env}
+      DB_HOST: db
+      DB_NAME: administrator_ai
+      DB_USER: aai_owner
+      DB_PASSWORD: ${AAI_OWNER_PASSWORD:?set in .env}
+    depends_on:
+      dbinit:
+        condition: service_completed_successfully
+    restart: "no"
+
+  redis:
+    image: redis:8-alpine
+    # noeviction: evicting broker keys would silently lose Celery tasks.
+    command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 128m
+
+  web:
+    <<: *app
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    environment: *runtime-env
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz/')"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 384m
+
+  worker:
+    <<: *app
+    command: ["celery", "-A", "config", "worker", "--loglevel=info", "--concurrency=1"]
+    environment: *runtime-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    mem_limit: 384m
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
+    mem_limit: 64m
+
+volumes:
+  db_data:

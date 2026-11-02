@@ -2,47 +2,83 @@
 
 Status reflects what has actually been run. Anything not listed as run is untested.
 
-## Milestone 1: SaaS foundation (in progress, not accepted)
+## Milestone 1: SaaS foundation
 
-| Increment | State |
+**State: acceptance criteria met in local development. Not a production release.**
+
+A user can register, verify their email, create a firm or join one by invitation, and use the tenant dashboard. Cross-tenant isolation tests pass.
+
+### Implemented
+
+- Compose stack: PostgreSQL 18 with pgvector, Redis, web, Celery worker and Beat, Mailpit, plus PgBouncer and browser test profiles.
+- Database roles `aai_owner`, `aai_app`, `aai_platform`, `aai_platform_definer`, with a guard that refuses unsafe runtime roles.
+- `aai_maint` from the plan is not created: nothing uses it until backups exist in Milestone 8.
+- Forced row-level security on all tenant, identity and audit tables, opened through `db_scope` from the URL namespace.
+- Registration, email verification, login, logout, password reset, throttling.
+- Tenants, memberships, roles and capabilities, invitations, settings, fiscal profile (user-declared, unverified).
+- Append-only audit tables.
+- Celery tasks that must declare a scope, with tenant context carried explicitly.
+- `/platform/`: overview, tenants (search, create, suspend, reactivate), users, audit log. Data is masked at source. There is no impersonation.
+- Landing page and application shell in Romanian, following the design reference.
+
+### Migrations
+
+`core` 0001–0003, `accounts` 0001–0002, `tenants` 0001–0002, `audit` 0001–0002, `platform_admin` 0001. Applied to the development database.
+
+### Tests executed on 2 November 2026
+
+| Check | Result |
 |---|---|
-| 0 Compose, settings, role guard | Done, run |
-| 1 User model, `app` schema, grants | Done, run |
-| 2 Test harness as `aai_app`, negative control | Done, run |
-| 3 `db_scope`, query guard | Done, run |
-| 4 Tenant models, RLS, catalog tests | Done, run |
-| 5 `TenantFK`, system check | Done, run |
-| 6 Scope middleware, dashboard, base template | Done, run |
-| 7 Registration, verification, login, reset, throttling | Done, run. Password reset has no end-to-end test yet |
-| 8 Tenant creation, settings, fiscal profile, invitations | Done, run. Concurrency races not yet tested |
-| 9 Audit tables and triggers | Not started |
-| 10 Celery context API | Not started. Email is still sent inside the request |
-| 11 `/platform/` | Not started |
-| 12 Design system, landing page | Partial: tokens and app shell exist; landing page is a placeholder; HTMX, Alpine and Chart.js not yet added |
-| 13 Full isolation matrix, PgBouncer, E2E, docs | Not started |
+| `pytest` as `aai_app` | 125 passed (see the note on the last run below) |
+| Mutation: permissive tenant SELECT policy | Suite failed, 14 tests |
+| Mutation: identity mode sees every tenant | Suite failed, 4 tests |
+| Mutation: `db_scope` stops restoring context | Suite failed, 1 test |
+| PgBouncer smoke, transaction mode, one backend | 150 alternating transactions, no context carried over |
+| Real Celery worker through Redis | Task received the tenant context and wrote to the right tenant |
+| Browser flow in Chromium | Passed: register, verify, firm, invite, join, 403 by role, 404 for an outsider, HTMX search, suspend, audit log |
+| Landing page at 400 px | No horizontal scroll |
+| `ruff check` | Clean |
+| `makemigrations --check` | No changes |
+| `pip-audit` on `requirements.lock` | No known vulnerabilities |
+| Secret check | The generated `.env` application password appears nowhere in git history |
+| `gunicorn` with production settings | `/healthz/` and `/readyz/` answered |
+| `check --deploy` | Only `SECURE_HSTS_PRELOAD`, left off deliberately: see decisions |
 
-### Verified by running
-
-- `docker compose up -d --wait`: all services healthy; about 230 MiB in use at idle.
-- `pytest` in the `test` service as `aai_app`: see the last run below.
-- Real HTTP against `runserver`: login as the seed account, dashboard, fiscal profile, members and settings answer 200; a wrong password stays on the form; an unknown tenant answers 404; anonymous access redirects to login.
-- `web` refuses the owner role at connection time.
-- The local `.venv` runs `manage.py check` and connects as `aai_app`.
-- `pytest-django` 4.14 works with Django 6.1.2 for everything in this suite, although it does not declare 6.1.
+The mutations were reverted after each run.
 
 ### Defects found by running
 
-- `runserver` failed at startup: its migration check was blocked by the query guard, and `aai_app` could not read `django_migrations`. Fixed, with a regression test in `tests/isolation/test_runtime_startup.py`.
-- The negative control test first passed nothing useful because it ran inside the suite's wrapping transaction. It now uses committed data.
+Each of these passed the unit tests at the time, and a regression test now covers the first two.
 
-### Development seed
+- `runserver` failed at startup: the query guard blocked its migration check, and `aai_app` could not read `django_migrations`.
+- `enqueue()` failed on Celery's real send path: Celery validated the context kwargs against the task signature. The earlier test had patched `apply_async`.
+- `aai_platform` needed `EXECUTE` on `mask_email`: functions inside a view are checked against the querying role.
+- Production settings sent email to the console. Found by `check --deploy`.
 
-`docker compose exec web python manage.py seed_dev` creates the fictional tenant "Firmă Demo SRL (fictivă)" and the account `admin` / `1234` with the Owner role. It runs as `aai_app` through the normal services. It refuses to run unless `DEBUG` and `AAI_ALLOW_DEV_SEED` are both on, which only `config.settings.dev` sets. The account deliberately skips the password policy and must never exist outside local development.
+### Security considerations
+
+- RLS protects against application bugs. Injected SQL could set any tenant context, so that risk rests on parameterised queries and on role grants, which are separate from RLS.
+- The table owner can always disable RLS, so `aai_owner` credentials exist only in the migrate and test containers.
+- Colleagues' password hashes are readable at ORM level inside a tenant scope. See decisions.
+- The development accounts use the password `1234`. `seed_dev` refuses to run outside development settings.
 
 ### Known limitations
 
-- `requirements*.txt` use version ranges; there is no lock file yet.
-- Marketing claims from the design reference are not on the placeholder landing page yet.
-- No audit trail exists yet, so nothing is logged for security review.
-- `web` runs the development server in Compose. Gunicorn is the Dockerfile default and has not been run.
-- CI is not written.
+- Emails are sent inside the request, not through Celery, so a mail server outage fails or slows the request.
+- MFA, data export and deletion, and retention settings are not built.
+- No Content-Security-Policy header. The Alpine build needs `unsafe-eval`, so this needs a decision.
+- The admin cannot yet change member roles or remove members; only invitations exist.
+- Platform "Create tenant" requires the owner to already have an account.
+- The landing page has no photographs: the ones in the design reference are not usable assets.
+- The price on the landing page is provisional text from the design reference.
+- CI is written but has never run, because there is no remote.
+- `mypy` is not configured.
+- Docker Desktop lists Windows 10 22H2 only while it is within Microsoft's servicing timeline, so this machine may stop receiving updates.
+
+### Remaining dependencies
+
+None for local development. Production needs hosting, a mail provider and the Milestone 8 gates.
+
+### Next: Milestone 2, AI gateway and cost control
+
+Buildable and testable with a fake provider. Real calls need an OpenAI API key.

@@ -159,5 +159,48 @@ services:
       redis:
         condition: service_healthy
 
+  # Isolation smoke test through a transaction-mode pool with one server connection.
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.2-p0
+    profiles: ["pooling"]
+    environment:
+      DB_HOST: db
+      DB_NAME: administrator_ai
+      DB_USER: aai_app
+      DB_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
+      AUTH_TYPE: plain
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 64m
+
+  pgbouncer-smoke:
+    <<: *app
+    profiles: ["pooling"]
+    command: ["python", "tests/smoke/pgbouncer_smoke.py"]
+    environment:
+      <<: *runtime-env
+      DB_HOST: pgbouncer
+      PYTHONPATH: /app
+    depends_on:
+      - pgbouncer
+
+  e2e:
+    image: mcr.microsoft.com/playwright/python:v1.49.1-noble
+    profiles: ["e2e"]
+    working_dir: /e2e
+    command: ["sh", "-c", "pip install --quiet --no-cache-dir playwright==1.49.1 && python run_flow.py"]
+    environment:
+      SHOTS_DIR: /shots
+    volumes:
+      - ./tests/e2e:/e2e:ro
+      - ./tests/e2e/shots:/shots
+    shm_size: 256m
+    depends_on:
+      web:
+        condition: service_healthy
+
 volumes:
   db_data:

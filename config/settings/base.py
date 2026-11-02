@@ -158,3 +158,6 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 24 * 60 * 60,
     },
 }
+
+# Provisional text from the design reference, not a confirmed commercial decision.
+AAI_LANDING_PRICE_TEXT = env("AAI_LANDING_PRICE_TEXT", "49 – 179 lei")

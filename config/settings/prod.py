@@ -9,3 +9,16 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+MAILERS = {
+    "default": {
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {
+            "host": env("MAIL_HOST"),
+            "port": int(env("MAIL_PORT", "587")),
+            "username": env("MAIL_USERNAME", ""),
+            "password": env("MAIL_PASSWORD", ""),
+            "use_tls": True,
+        },
+    },
+}

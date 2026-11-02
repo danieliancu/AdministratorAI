@@ -1,6 +1,184 @@
-{% extends "base_public.html" %}
-{% block title %}Administrator AI{% endblock %}
-{% block content %}
-<h1>Administrator AI</h1>
-<p><a href="{% url 'public:login' %}">Autentificare</a></p>
-{% endblock %}
+{% load static %}<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administrator AI: înțelege-ți afacerea</title>
+  <meta name="description" content="Administrator AI adună vânzările, cheltuielile, stocurile și obligațiile firmei și ți le explică pe înțelesul tău.">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+  <script defer src="{% static 'vendor/alpine-3.14.9.min.js' %}"></script>
+</head>
+<body class="landing">
+<header class="lp-header" x-data="{ open: false }">
+  <div class="lp-container lp-header-row">
+    {% include "components/brand.html" %}
+    <button class="lp-menu-toggle" type="button" aria-label="Meniu" :aria-expanded="open" @click="open = !open">
+      <span aria-hidden="true">☰</span>
+    </button>
+    <nav class="lp-nav" :class="open && 'is-open'" aria-label="Navigare principală">
+      <a href="#functionalitati">Funcționalități</a>
+      <a href="#cum-functioneaza">Cum funcționează</a>
+      <a href="#pentru-cine">Pentru cine</a>
+      <a href="#preturi">Prețuri</a>
+      {% if user.is_authenticated %}
+        <a class="btn btn-primary" href="{% url 'account:tenant-list' %}">Deschide aplicația</a>
+      {% else %}
+        <a href="{% url 'public:login' %}">Autentificare</a>
+        <a class="btn btn-primary" href="{% url 'public:register' %}">Creează cont →</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="lp-hero">
+    <div class="lp-container lp-hero-grid">
+      <div>
+        <p class="lp-eyebrow">Asistentul tău digital pentru o afacere mai clară</p>
+        <h1>Înțelege-ți afacerea.<br><span class="lp-accent">Ia decizii mai bune,</span><br>fără să fii contabil.</h1>
+        <p class="lp-lead">Administrator AI va aduna vânzările, cheltuielile, stocurile și obligațiile firmei tale, ți le va explica pe înțelesul tău și îți va recomanda ce să faci în continuare.</p>
+        <div class="lp-actions">
+          <a class="btn btn-primary" href="{% url 'public:register' %}">Creează cont →</a>
+          <a class="btn btn-secondary" href="#cum-functioneaza">Vezi cum funcționează</a>
+        </div>
+        <p class="lp-status" role="note"><strong>Aplicație în construcție.</strong> Azi sunt disponibile conturile, firmele, membrii și profilul fiscal. Restul modulelor sunt marcate „în curând”.</p>
+      </div>
+
+      <figure class="lp-preview" aria-label="Exemplu ilustrativ de panou, cu cifre fictive">
+        <figcaption class="lp-preview-note">Exemplu ilustrativ · cifre fictive</figcaption>
+        <div class="lp-preview-body">
+          <div class="lp-preview-side" aria-hidden="true">
+            <span class="is-active">Panou principal</span><span>Vânzări</span><span>Cheltuieli</span><span>Stocuri</span><span>Obligații fiscale</span><span>Rapoarte</span>
+          </div>
+          <div class="lp-preview-main" aria-hidden="true">
+            <p class="lp-preview-hello">Bun venit!</p>
+            <div class="lp-preview-grid">
+              <div class="lp-tile lp-tile-wide">
+                <small>Vânzări și profit estimat</small>
+                <b>42.560 lei</b>
+                <svg viewBox="0 0 200 50" preserveAspectRatio="none" role="presentation">
+                  <polyline fill="none" stroke="#1570ef" stroke-width="2.5" stroke-linejoin="round" points="0,42 30,34 60,37 90,26 120,28 150,16 200,6"/>
+                </svg>
+              </div>
+              <div class="lp-tile">
+                <small>Ponderea vânzărilor</small>
+                <ul><li>Cafea boabe <i>38%</i></li><li>Băuturi <i>28%</i></li><li>Gustări <i>22%</i></li></ul>
+              </div>
+              <div class="lp-tile">
+                <small>Stocuri</small>
+                <b>128</b><span>produse</span>
+              </div>
+              <div class="lp-tile lp-tile-wide">
+                <small>Asistent AI</small>
+                <span>Recomandarea ar apărea aici, împreună cu sursele ei.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="lp-section lp-container lp-problem">
+    <div>
+      <p class="lp-eyebrow">O problemă reală pentru mulți antreprenori</p>
+      <h2>Problema pe care o rezolvăm</h2>
+      <p>Ai facturi, rapoarte și multe cifre, dar e greu să înțelegi repede la ce te uiți și ce decizii să iei. Administrator AI vrea să-ți ofere claritate, fără să fii contabil.</p>
+    </div>
+    <div class="lp-question-grid">
+      <article class="lp-question"><h3>Cât câștig cu adevărat?</h3><p>Profitul, nu doar încasările.</p></article>
+      <article class="lp-question"><h3>Unde pierd bani?</h3><p>Ce cheltuieli sunt prea mari.</p></article>
+      <article class="lp-question"><h3>Ce pot optimiza?</h3><p>Explicații simple și recomandări concrete.</p></article>
+      <article class="lp-question"><h3>Ce produse merită stoc?</h3><p>Ce se vinde bine și ce trebuie reaprovizionat.</p></article>
+    </div>
+  </section>
+
+  <section class="lp-section lp-tint" id="functionalitati">
+    <div class="lp-container">
+      <p class="lp-eyebrow">Tot ce ai nevoie, într-un singur loc</p>
+      <h2>Ce vei vedea în aplicație</h2>
+      <p class="muted">Informațiile importante, pe înțelesul tău. Toate modulele de mai jos sunt în construcție.</p>
+      <div class="lp-feature-grid">
+        {% for title, items in features %}
+        <article class="lp-feature">
+          <div class="lp-feature-top"><h3>{{ title }}</h3><span class="badge">în curând</span></div>
+          <ul>{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section lp-container" id="cum-functioneaza">
+    <p class="lp-eyebrow">Cum va funcționa</p>
+    <h2>Simplu, rapid și fără bătăi de cap</h2>
+    <ol class="lp-steps">
+      <li><span class="lp-step-number" aria-hidden="true">1</span><h3>Conectezi datele firmei</h3><p>Importi date din programul de facturare, POS sau fișiere.</p></li>
+      <li><span class="lp-step-number" aria-hidden="true">2</span><h3>AI-ul interpretează informația</h3><p>Analizează cifrele și le transformă în explicații clare, fără termeni complicați.</p></li>
+      <li><span class="lp-step-number" aria-hidden="true">3</span><h3>Primești explicații și recomandări</h3><p>Vezi ce se întâmplă în afacerea ta și ce poți face mai bine, pas cu pas.</p></li>
+    </ol>
+  </section>
+
+  <section class="lp-section lp-tint" id="pentru-cine">
+    <div class="lp-container">
+      <p class="lp-eyebrow">Pentru cine este</p>
+      <h2>Lansat inițial pentru afaceri mici și mijlocii</h2>
+      <div class="lp-audience-grid">
+        {% for name, detail in audiences %}
+        <article class="lp-audience"><h3>{{ name }}</h3><p>{{ detail }}</p></article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-section lp-container lp-partner">
+    <div>
+      <p class="lp-eyebrow">Un partener, nu un înlocuitor</p>
+      <h2>Nu înlocuiește contabilul. Îl completează.</h2>
+      <p>Administrator AI îți va oferi o înțelegere mai bună a afacerii tale. Rezultatele te ajută să discuți mai bine cu contabilul și să iei decizii mai informate.</p>
+    </div>
+    <ul class="lp-benefits">
+      <li><strong>Timp economisit</strong>: mai puține raportări manuale</li>
+      <li><strong>Decizii mai bune</strong>: bazate pe date reale</li>
+      <li><strong>Comunicare mai ușoară</strong> cu contabilul</li>
+      <li><strong>Claritate</strong> asupra performanței afacerii</li>
+    </ul>
+  </section>
+
+  <section class="lp-section lp-tint" id="preturi">
+    <div class="lp-container lp-pricing">
+      <div>
+        <p class="lp-eyebrow">Model de business</p>
+        <h2>Testează fără risc</h2>
+        <p>Preț simplu, fără costuri ascunse.</p>
+      </div>
+      <div class="lp-price card">
+        <p class="lp-price-value">{{ price_text }} <small>/ lună + TVA</small></p>
+        <p class="small muted">Preț orientativ, în funcție de complexitatea firmei și funcțiile utilizate. Abonamentele nu sunt încă disponibile.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-cta">
+    <div class="lp-container lp-cta-row">
+      <h2>Putem transforma experiența ta cu contabilul într-un asistent digital utilizat zilnic?</h2>
+      <a class="btn btn-primary" href="{% url 'public:register' %}">Creează cont →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="lp-footer">
+  <div class="lp-container lp-footer-row">
+    {% include "components/brand.html" %}
+    <nav class="lp-footer-nav" aria-label="Navigare în subsol">
+      <a href="#functionalitati">Funcționalități</a>
+      <a href="#cum-functioneaza">Cum funcționează</a>
+      <a href="#pentru-cine">Pentru cine</a>
+      <a href="#preturi">Prețuri</a>
+    </nav>
+    <p class="small muted">© {% now "Y" %} Administrator AI</p>
+  </div>
+</footer>
+</body>
+</html>

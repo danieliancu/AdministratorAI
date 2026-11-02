@@ -21,6 +21,8 @@ class TenantTask(ScopedTask):
     """Restores the tenant context captured by enqueue(). Runs in one transaction."""
 
     scope = "tenant"
+    # Celery would otherwise check the context kwargs against the task's own signature.
+    typing = False
 
     def __call__(self, *args, _tenant_id=None, _actor_id=None, **kwargs):
         from apps.tenants.models import Tenant

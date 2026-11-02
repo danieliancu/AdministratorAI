@@ -23,13 +23,13 @@ def overview(request):
 @requires_platform(VIEW)
 def tenant_list(request):
     search = request.GET.get("q", "").strip()
+    is_partial = request.headers.get("HX-Request") == "true"
     return render(
         request,
-        "platform/tenants.html",
+        "platform/_tenants_table.html" if is_partial else "platform/tenants.html",
         {
             "page": _page(request, services.tenants(search)),
             "search": search,
-            "status_form": TenantStatusForm(),
             "can_manage": request.platform_access.can(MANAGE),
         },
     )

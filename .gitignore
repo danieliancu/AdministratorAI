@@ -11,3 +11,4 @@ __pycache__/
 htmlcov/
 staticfiles/
 media/
+tests/e2e/shots/

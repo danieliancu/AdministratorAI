@@ -242,3 +242,11 @@ def test_open_redirect_is_refused_at_login(client):
         {"identifier": alice.email, "password": PASSWORD, "next": "https://rau.example/"},
     )
     assert response["Location"] == reverse("account:tenant-list")
+
+
+def test_landing_is_honest_about_what_exists(client):
+    content = client.get(reverse("public:landing")).content.decode()
+    assert "Aplicație în construcție" in content
+    assert "Exemplu ilustrativ" in content
+    assert "în curând" in content
+    assert "orientativ" in content

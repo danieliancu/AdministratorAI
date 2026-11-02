@@ -1,0 +1,25 @@
+# Written but never executed: this repository has no remote yet.
+name: CI
+on: [push, pull_request]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-a-secret
+      POSTGRES_SUPERUSER_PASSWORD: ci-only-not-a-secret
+      AAI_OWNER_PASSWORD: ci-only-not-a-secret
+      AAI_APP_PASSWORD: ci-only-not-a-secret
+      AAI_PLATFORM_PASSWORD: ci-only-not-a-secret
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: docker compose build test
+      - run: docker compose run --rm --no-deps test ruff check .
+      - run: docker compose run --rm test pytest -q
+      - run: docker compose run --rm migrate python manage.py makemigrations --check --dry-run
+      - run: docker compose run --rm --no-deps test pip-audit -r requirements.lock --no-deps
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -288,3 +288,17 @@ def test_unknown_tenant_status_change_fails_cleanly(committed_db, owner_connecti
     grant(owner_connection, staff)
     with pytest.raises(DatabaseError, match="tenant not found"):
         services.set_tenant_status(staff.pk, uuid.uuid4(), "suspended", "motiv")
+
+
+def test_htmx_search_returns_only_the_partial(committed_db, owner_connection, client):
+    staff, owner = make_user(), make_user()
+    make_tenant(owner, "Căutată SRL")
+    make_tenant(owner, "Altă Firmă")
+    grant(owner_connection, staff)
+    sign_in(client, staff)
+    partial = client.get(
+        reverse("platform:tenants"), {"q": "Căutată"}, headers={"HX-Request": "true"}
+    ).content.decode()
+    assert "Căutată SRL" in partial
+    assert "Altă Firmă" not in partial
+    assert "<html" not in partial

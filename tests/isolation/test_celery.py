@@ -86,6 +86,21 @@ def test_enqueue_sends_only_after_commit_and_carries_context(committed_db, monke
     assert sent == [((), {"_tenant_id": str(tenant.pk), "_actor_id": str(user.pk)})]
 
 
+def test_enqueue_through_celerys_real_send_path(committed_db):
+    """No patching of apply_async: Celery validates kwargs there, before anything is sent."""
+    user = make_user()
+    tenant = make_tenant(user)
+    previous = app.conf.task_always_eager
+    app.conf.task_always_eager = True
+    try:
+        with db_scope(tenant_id=tenant.pk, user_id=user.pk):
+            enqueue(record_context_probe)
+    finally:
+        app.conf.task_always_eager = previous
+    with db_scope(tenant_id=tenant.pk, user_id=user.pk):
+        assert TenantEvent.objects.filter(action="diagnostic.worker_context").count() == 1
+
+
 def test_rolled_back_transaction_sends_nothing(committed_db, monkeypatch):
     user = make_user()
     tenant = make_tenant(user)

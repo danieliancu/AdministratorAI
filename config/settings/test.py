@@ -20,3 +20,5 @@ CACHES = {
         "LOCATION": env("CACHE_REDIS_URL", "redis://redis:6379/2"),
     },
 }
+
+AAI_ALLOW_FAKE_AI = True

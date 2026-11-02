@@ -21,6 +21,12 @@ class TenantAccess:
 
         return Role(self.role).label
 
+    @property
+    def can_view_ai_usage(self):
+        from .roles import VIEW_AI_USAGE
+
+        return self.can(VIEW_AI_USAGE)
+
     def can(self, capability):
         from .roles import CAPABILITIES
 

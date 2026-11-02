@@ -1,0 +1,63 @@
+{% extends "base_platform.html" %}
+{% block title %}Costuri AI{% endblock %}
+{% block content %}
+<h1>Costuri AI</h1>
+<p class="muted">Costuri calculate din consumul raportat de provider și din prețurile versionate. Veniturile și marja de contribuție apar după construirea abonamentelor.</p>
+<section class="card">
+  <h2>Pe operație și model</h2>
+  {% if breakdown %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Luna</th><th scope="col">Operație</th><th scope="col">Model</th><th scope="col">Cereri</th><th scope="col">Intrare</th><th scope="col">Din cache</th><th scope="col">Ieșire</th><th scope="col">Cost</th></tr></thead>
+      <tbody>
+      {% for b in breakdown %}
+        <tr>
+          <td>{{ b.month|date:"m.Y" }}</td>
+          <td>{{ b.operation_id }}</td>
+          <td>{{ b.model_id }}{% if b.is_synthetic %} <span class="badge">sintetic</span>{% endif %}</td>
+          <td>{{ b.requests }}</td>
+          <td>{{ b.input_tokens }}</td>
+          <td>{{ b.cached_tokens }}</td>
+          <td>{{ b.output_tokens }}</td>
+          <td>{{ b.cost|floatformat:6 }} {{ b.currency }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">Nu există încă consum.</p>
+  {% endif %}
+</section>
+<section class="card" style="margin-top:1rem">
+  <h2>Reconciliere cu factura providerului</h2>
+  {% if reconciliations %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Provider</th><th scope="col">Perioadă</th><th scope="col">Raportat</th><th scope="col">Calculat</th><th scope="col">Diferență</th><th scope="col">Notă</th></tr></thead>
+      <tbody>
+      {% for r in reconciliations %}
+        <tr>
+          <td>{{ r.provider_id }}</td>
+          <td>{{ r.period_start|date:"d.m.Y" }} – {{ r.period_end|date:"d.m.Y" }}</td>
+          <td>{{ r.reported_cost|floatformat:4 }} {{ r.currency }}</td>
+          <td>{{ r.calculated_cost|floatformat:4 }}</td>
+          <td>{{ r.difference|floatformat:4 }}</td>
+          <td>{{ r.note }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">Nu există încă reconcilieri.</p>
+  {% endif %}
+  {% if can_manage %}
+  <form method="post" action="{% url 'platform:ai-reconcile' %}" style="max-width:30rem;margin-top:1rem">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">Salvează reconcilierea</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

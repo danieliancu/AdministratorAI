@@ -1,0 +1,8 @@
+{% extends "base_tenant.html" %}
+{% block title %}Consum AI · {{ request.tenant_access.tenant_name }}{% endblock %}
+{% block content %}
+<h1>Consum AI</h1>
+<div id="ai-usage" hx-get="{% url 'tenant:ai-usage' request.tenant_access.tenant_id %}" hx-trigger="every 5s" hx-swap="innerHTML" aria-live="polite">
+  {% include "ai_gateway/_usage_body.html" %}
+</div>
+{% endblock %}

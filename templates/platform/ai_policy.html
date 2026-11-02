@@ -1,0 +1,12 @@
+{% extends "base_platform.html" %}
+{% block title %}Politică AI{% endblock %}
+{% block content %}
+<h1>Politică AI{% if current %}: {{ current.tenant_name }}{% endif %}</h1>
+<section class="card" style="max-width:36rem">
+  <form method="post">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">Salvează</button>
+  </form>
+</section>
+{% endblock %}

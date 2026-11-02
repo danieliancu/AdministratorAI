@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ request.tenant_access.tenant_name }}{% endblock %} · Administrator AI</title>
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script defer src="{% static 'vendor/htmx-2.0.4.min.js' %}"></script>
 </head>
 <body>
 <div class="app">
@@ -23,6 +24,7 @@
         <li><span class="soon">Integrări <em>în curând</em></span></li>
         <li><a href="{% url 'tenant:fiscal-profile' tid %}"{% if active == 'fiscal-profile' %} aria-current="page"{% endif %}>Profil fiscal</a></li>
         <li><a href="{% url 'tenant:members' tid %}"{% if active == 'members' %} aria-current="page"{% endif %}>Membri</a></li>
+        {% if request.tenant_access.can_view_ai_usage %}<li><a href="{% url 'tenant:ai-usage' tid %}"{% if active == 'ai-usage' %} aria-current="page"{% endif %}>Consum AI</a></li>{% endif %}
         <li><a href="{% url 'tenant:settings' tid %}"{% if active == 'settings' %} aria-current="page"{% endif %}>Setări</a></li>
       </ul>
     </nav>

@@ -12,3 +12,5 @@ MAILERS = {
 }
 
 AAI_ALLOW_DEV_SEED = True
+
+AAI_ALLOW_FAKE_AI = True

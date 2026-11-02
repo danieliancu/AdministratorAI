@@ -24,8 +24,13 @@ class TenantFK(BaseConstraint):
         return f"CONSTRAINT {self.name} {self._definition()}"
 
     def create_sql(self, model, schema_editor):
+        # Deferred to the end of the migration: the unique constraint this key targets
+        # may be created by a later operation of the same migration.
         table = model._meta.db_table
-        return f"ALTER TABLE {table} ADD CONSTRAINT {self.name} {self._definition()}"
+        schema_editor.deferred_sql.append(
+            f"ALTER TABLE {table} ADD CONSTRAINT {self.name} {self._definition()}"
+        )
+        return None
 
     def remove_sql(self, model, schema_editor):
         return f"ALTER TABLE {model._meta.db_table} DROP CONSTRAINT {self.name}"

@@ -4,3 +4,5 @@ celery>=5.6,<5.7
 redis>=5,<8
 gunicorn>=23
 whitenoise>=6.9,<7
+openai>=3.42,<4
+jsonschema>=4.23,<5

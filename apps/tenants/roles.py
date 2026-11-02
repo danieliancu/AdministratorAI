@@ -14,6 +14,8 @@ VIEW_FISCAL_PROFILE = "view_fiscal_profile"
 EDIT_FISCAL_PROFILE = "edit_fiscal_profile"
 MANAGE_MEMBERS = "manage_members"
 MANAGE_SETTINGS = "manage_settings"
+USE_AI = "use_ai"
+VIEW_AI_USAGE = "view_ai_usage"
 
 CAPABILITIES = {
     Role.OWNER: {
@@ -22,6 +24,8 @@ CAPABILITIES = {
         EDIT_FISCAL_PROFILE,
         MANAGE_MEMBERS,
         MANAGE_SETTINGS,
+        USE_AI,
+        VIEW_AI_USAGE,
     },
     Role.ADMINISTRATOR: {
         VIEW_DASHBOARD,
@@ -29,9 +33,17 @@ CAPABILITIES = {
         EDIT_FISCAL_PROFILE,
         MANAGE_MEMBERS,
         MANAGE_SETTINGS,
+        USE_AI,
+        VIEW_AI_USAGE,
     },
-    Role.ACCOUNTANT: {VIEW_DASHBOARD, VIEW_FISCAL_PROFILE, EDIT_FISCAL_PROFILE},
-    Role.MEMBER: {VIEW_DASHBOARD, VIEW_FISCAL_PROFILE},
+    Role.ACCOUNTANT: {
+        VIEW_DASHBOARD,
+        VIEW_FISCAL_PROFILE,
+        EDIT_FISCAL_PROFILE,
+        USE_AI,
+        VIEW_AI_USAGE,
+    },
+    Role.MEMBER: {VIEW_DASHBOARD, VIEW_FISCAL_PROFILE, USE_AI},
     Role.READ_ONLY: {VIEW_DASHBOARD},
 }
 

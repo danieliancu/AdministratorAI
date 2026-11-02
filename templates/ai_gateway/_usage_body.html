@@ -1,0 +1,70 @@
+{% if not policy %}
+<section class="card">
+  <h2>AI nu este activat pentru această firmă</h2>
+  <p class="muted">Limitele sunt stabilite de administratorul platformei.</p>
+</section>
+{% else %}
+{% for alert in alerts %}
+<div class="alert {% if alert.threshold >= 100 %}alert-error{% else %}alert-warning{% endif %}" role="status">
+  Ai atins {{ alert.threshold }}% din bugetul AI al perioadei.
+</div>
+{% endfor %}
+<div class="grid">
+  <section class="card">
+    <h2>Buget în perioada curentă</h2>
+    {% if budget %}
+      <p style="font-size:1.5rem;font-weight:700;margin:0">{{ budget.spent|floatformat:4 }} / {{ budget.limit_amount|floatformat:4 }} {{ budget.currency }}</p>
+      <p class="small muted">{{ used_percent }}% folosit · {{ budget.period_start|date:"d.m.Y" }} – {{ budget.period_end|date:"d.m.Y" }}</p>
+    {% else %}
+      <p class="muted">Nu s-a consumat nimic în această perioadă.</p>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2>Rezervat</h2>
+    <p style="font-size:1.5rem;font-weight:700;margin:0">{{ budget.reserved|default:0|floatformat:4 }} {{ policy.currency }}</p>
+    <p class="small muted">Sume blocate pentru cereri în curs sau cu rezultat necunoscut. Se eliberează doar după confirmare.</p>
+  </section>
+  {% if can_use %}
+  <section class="card">
+    <h2>Test de diagnostic</h2>
+    <p class="small muted">Trimite o cerere reală prin gateway. Consumă din buget.</p>
+    <form method="post" action="{% url 'tenant:ai-test' request.tenant_access.tenant_id %}">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">Rulează testul</button>
+    </form>
+  </section>
+  {% endif %}
+</div>
+
+{% if last_response %}
+<section class="card" style="margin-top:1rem">
+  <h2>Ultimul răspuns {% if last_response.is_synthetic %}<span class="badge">sintetic</span>{% endif %}</h2>
+  <p style="margin:0">{{ last_response.output_text }}</p>
+</section>
+{% endif %}
+
+<section class="card" style="margin-top:1rem">
+  <h2>Ultimele cereri</h2>
+  {% if events %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Când</th><th scope="col">Operație</th><th scope="col">Stare</th><th scope="col">Tokeni intrare</th><th scope="col">Tokeni ieșire</th><th scope="col">Cost</th></tr></thead>
+      <tbody>
+      {% for e in events %}
+        <tr>
+          <td>{{ e.created_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ e.operation.name }}{% if e.is_synthetic %} <span class="badge">sintetic</span>{% endif %}</td>
+          <td>{{ e.get_status_display }}</td>
+          <td>{{ e.input_tokens }}</td>
+          <td>{{ e.output_tokens }}</td>
+          <td>{{ e.actual_cost|floatformat:6 }} {{ e.currency }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">Nu există încă cereri.</p>
+  {% endif %}
+</section>
+{% endif %}

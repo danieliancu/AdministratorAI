@@ -82,3 +82,52 @@ None for local development. Production needs hosting, a mail provider and the Mi
 ### Next: Milestone 2, AI gateway and cost control
 
 Buildable and testable with a fake provider. Real calls need an OpenAI API key.
+
+## Milestone 2: AI gateway and cost control
+
+**State: acceptance criteria met with a fake provider. No real provider has been called.** Every AI request through the gateway is tenant-scoped, cost-accounted and subject to enforced limits. See [cost accounting](ai/cost-accounting.md).
+
+### Implemented
+
+- Central gateway with provider adapters: OpenAI, and a fake one refused outside development.
+- Versioned model prices with five rates, immutable prompt versions, and an operation catalog.
+- Atomic budget reservations, firm and per-user limits, per-request caps, rate limits, overage only when authorised, and alerts at 70, 90 and 100 percent.
+- Idempotent requests, tenant-isolated exact-match caching, and bounded retries.
+- Conservative handling of uncertain outcomes, with audited resolution by staff.
+- Tenant page "Consum AI", and platform pages for usage, costs, policies, uncertain reservations and reconciliation.
+
+### Migrations
+
+`ai_gateway` 0001–0003, `platform_admin` 0002. Applied to the development database.
+
+### Tests executed on 2 November 2026
+
+| Check | Result |
+|---|---|
+| `pytest` as `aai_app` | 232 passed |
+| Concurrency tests, 5 repeated runs | 4 passed each time |
+| Mutation: no row lock on the budget | 3 of 4 concurrency tests failed in each of 3 runs; reverted |
+| Cost formula | Matches the worked example in the OpenAI prompt caching guide |
+| OpenAI adapter | Simulated HTTP only |
+| Browser, page to Redis to real worker to gateway to fake provider | Passed; a 54 + 20 token request cost $0.000134 in the database, as calculated by hand |
+| `pip-audit` on `requirements.lock` | No known vulnerabilities |
+
+### Defects found by running
+
+- `TenantFK` could run before the unique constraint it targets, within one migration. It worked for earlier tables only because of operation order. It now runs at the end of the migration.
+
+### Known limitations
+
+See "Not built yet" in the [cost accounting](ai/cost-accounting.md) document. Also:
+
+- A prompt template change needs a data migration; there is no management page.
+- Assigning a model to an operation has no command outside the development seed.
+- Denied requests are written to the tenant's audit log even when the caller is not a member, so a signed-in non-member calling code directly could add noise there. No page lets them do so today.
+
+### Remaining dependencies
+
+- An OpenAI API key, and the current official prices, for the first real call.
+
+### Next: Milestone 3, legal knowledge infrastructure
+
+Needs a legal review of reuse terms before commercial use. Portal Legislativ's terms are undocumented.

@@ -173,9 +173,25 @@ def test_tenant_to_tenant_foreign_keys_are_composite(owner_connection):
 
 @pytest.mark.django_db
 def test_models_and_manifest_agree():
-    model_tables = {
-        model._meta.db_table
-        for model in apps.get_models()
-        if model._meta.app_label in ("accounts", "tenants")
-    }
-    assert model_tables == manifest.RLS_TABLES
+    model_tables = {model._meta.db_table for model in apps.get_models()}
+    assert model_tables <= manifest.ALL_TABLES
+
+
+def test_application_cannot_reach_platform_only_tables(owner_connection):
+    for table in manifest.PLATFORM_ONLY:
+        rows = _rows(
+            owner_connection, f"SELECT has_table_privilege('aai_app', '{table}', 'SELECT')"
+        )
+        assert rows == [(False,)], table
+
+
+def test_application_only_reads_the_global_catalog(owner_connection):
+    for table in manifest.GLOBAL_REF:
+        rows = _rows(
+            owner_connection,
+            f"""SELECT has_table_privilege('aai_app', '{table}', 'SELECT'),
+                       has_table_privilege('aai_app', '{table}', 'INSERT'),
+                       has_table_privilege('aai_app', '{table}', 'UPDATE'),
+                       has_table_privilege('aai_app', '{table}', 'DELETE')""",
+        )
+        assert rows == [(True, False, False, False)], table

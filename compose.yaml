@@ -57,6 +57,7 @@ services:
     command: ["python", "manage.py", "migrate", "--noinput"]
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.migrate
+      AAI_ALLOW_FAKE_AI: "true"
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set in .env}
       DB_HOST: db
       DB_NAME: administrator_ai
@@ -109,7 +110,10 @@ services:
     <<: *app
     command: ["celery", "-A", "config", "worker", "--loglevel=info", "--concurrency=1"]
     restart: unless-stopped
-    environment: *runtime-env
+    environment:
+      <<: *runtime-env
+      # Only the worker calls AI providers, so only the worker holds the key.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

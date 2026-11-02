@@ -18,8 +18,8 @@
         <li><a href="{% url 'platform:tenants' %}"{% if active == 'tenants' or active == 'tenant-new' %} aria-current="page"{% endif %}>Firme</a></li>
         <li><a href="{% url 'platform:users' %}"{% if active == 'users' %} aria-current="page"{% endif %}>Utilizatori</a></li>
         <li><span class="soon">Abonamente <em>în curând</em></span></li>
-        <li><span class="soon">Utilizare AI <em>în curând</em></span></li>
-        <li><span class="soon">Costuri AI <em>în curând</em></span></li>
+        <li><a href="{% url 'platform:ai-usage' %}"{% if active == 'ai-usage' or active == 'ai-policy' %} aria-current="page"{% endif %}>Utilizare AI</a></li>
+        <li><a href="{% url 'platform:ai-costs' %}"{% if active == 'ai-costs' %} aria-current="page"{% endif %}>Costuri AI</a></li>
         <li><span class="soon">Surse legislative <em>în curând</em></span></li>
         <li><span class="soon">Actualizări legislative <em>în curând</em></span></li>
         <li><span class="soon">Reguli fiscale <em>în curând</em></span></li>

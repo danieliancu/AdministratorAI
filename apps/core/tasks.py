@@ -36,6 +36,21 @@ class TenantTask(ScopedTask):
             return self.run(*args, **kwargs)
 
 
+class UnscopedTenantTask(ScopedTask):
+    """Tenant context without a surrounding transaction, for work that opens its own scopes.
+
+    The AI gateway needs this: its reservation must commit before the slow provider call.
+    """
+
+    scope = "tenant"
+    typing = False
+
+    def __call__(self, *args, _tenant_id=None, _actor_id=None, **kwargs):
+        if _tenant_id is None:
+            raise Reject("Tenant task without tenant context", requeue=False)
+        return self.run(*args, tenant_id=_tenant_id, user_id=_actor_id, **kwargs)
+
+
 class SystemTask(ScopedTask):
     """Runs with no tenant context, so row-level security shows it no tenant data."""
 

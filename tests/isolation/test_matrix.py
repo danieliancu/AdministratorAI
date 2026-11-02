@@ -10,6 +10,7 @@ from django.db import DatabaseError, connection, connections
 from django.db.models import Count
 from django.utils import timezone
 
+from apps.ai_gateway.models import AIStoredResponse
 from apps.audit.models import TenantEvent
 from apps.core.db.scope import db_scope
 from apps.tenants import services
@@ -46,11 +47,21 @@ def _make_invitation(tenant, user):
     )
 
 
+def _make_stored_response(tenant, user):
+    return AIStoredResponse.objects.create(
+        tenant=tenant,
+        cache_key=uuid.uuid4().hex,
+        output_text="Secret",
+        expires_at=timezone.now() + timedelta(days=1),
+    )
+
+
 MODELS = [
     pytest.param(TenantMembership, _membership, id="membership"),
     pytest.param(TenantSettings, _make_settings, id="settings"),
     pytest.param(CompanyFiscalProfile, _make_profile, id="fiscal-profile"),
     pytest.param(TenantInvitation, _make_invitation, id="invitation"),
+    pytest.param(AIStoredResponse, _make_stored_response, id="ai-stored-response"),
 ]
 
 
@@ -96,7 +107,9 @@ class TestEveryTenantModel:
         alice, bob, tenant_a, tenant_b = world
         row = _foreign_row(world, make)
         with db_scope(tenant_id=tenant_a.pk, user_id=alice.pk):
-            assert model.objects.filter(pk=row.pk).update(tenant_id=tenant_a.pk) == 0
+            # Stored AI answers cannot be updated by the application at all.
+            if model is not AIStoredResponse:
+                assert model.objects.filter(pk=row.pk).update(tenant_id=tenant_a.pk) == 0
             assert model.objects.filter(pk=row.pk).delete()[0] == 0
         with db_scope(tenant_id=tenant_b.pk, user_id=bob.pk):
             assert model.objects.filter(pk=row.pk).exists()

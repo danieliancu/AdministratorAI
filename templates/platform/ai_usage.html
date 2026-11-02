@@ -1,0 +1,69 @@
+{% extends "base_platform.html" %}
+{% block title %}Utilizare AI{% endblock %}
+{% block content %}
+<h1>Utilizare AI</h1>
+{% if uncertain %}
+<section class="card" style="margin-bottom:1rem">
+  <h2>Rezervări cu rezultat necunoscut</h2>
+  <p class="muted small">Providerul poate să fi taxat aceste cereri. Sumele rămân blocate până verifici în contul providerului. Lasă suma goală dacă providerul confirmă că nu a taxat nimic.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Firmă</th><th scope="col">Operație</th><th scope="col">Blocat</th><th scope="col">Cauză</th><th scope="col">Creată la</th>{% if can_manage %}<th scope="col">Rezolvare</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for r in uncertain %}
+        <tr>
+          <td>{{ r.tenant_name }}</td>
+          <td>{{ r.operation_id }}</td>
+          <td>{{ r.max_cost|floatformat:6 }} {{ r.currency }}</td>
+          <td>{{ r.failure_reason|default:"proces întrerupt" }}</td>
+          <td>{{ r.created_at|date:"d.m.Y H:i" }}</td>
+          {% if can_manage %}
+          <td>
+            <form method="post" action="{% url 'platform:ai-resolve' r.id %}" style="display:flex;gap:.4rem;flex-wrap:wrap">
+              {% csrf_token %}
+              <input name="actual" inputmode="decimal" placeholder="Cost real" aria-label="Cost real pentru {{ r.tenant_name }}" style="width:7rem;padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
+              <input name="reason" required maxlength="500" placeholder="Motiv" aria-label="Motiv pentru {{ r.tenant_name }}" style="padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
+              <button class="btn btn-secondary" type="submit">Rezolvă</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+<section class="card">
+  <h2>Firme cu AI activat</h2>
+  {% if usage %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Firmă</th><th scope="col">Consumat</th><th scope="col">Rezervat</th><th scope="col">Buget lunar</th><th scope="col">Cereri</th>{% if can_manage %}<th scope="col">Politică</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for u in usage %}
+        <tr>
+          <td>{{ u.tenant_name }}</td>
+          <td>{{ u.spent|floatformat:6 }} {{ u.currency }}</td>
+          <td>{{ u.reserved|floatformat:6 }} {{ u.currency }}</td>
+          <td>{{ u.monthly_limit|floatformat:4 }} {{ u.currency }}{% if u.overage_authorised %} <span class="badge">depășire autorizată</span>{% endif %}</td>
+          <td>{{ u.requests }}</td>
+          {% if can_manage %}<td><a href="{% url 'platform:ai-policy' u.tenant_id %}">Modifică</a></td>{% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">Nicio firmă nu are încă AI activat.</p>
+  {% endif %}
+</section>
+{% if can_manage %}
+<section class="card" style="margin-top:1rem">
+  <h2>Activează sau modifică AI pentru o firmă</h2>
+  <ul>
+    {% for t in tenants %}<li><a href="{% url 'platform:ai-policy' t.id %}">{{ t.name }}</a></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

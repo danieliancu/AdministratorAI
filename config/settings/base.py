@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.tenants",
     "apps.audit",
     "apps.platform_admin",
+    "apps.ai_gateway",
 ]
 
 # DbScopeMiddleware must stay last: it answers from process_view, which skips
@@ -161,3 +162,11 @@ CELERY_BEAT_SCHEDULE = {
 
 # Provisional text from the design reference, not a confirmed commercial decision.
 AAI_LANDING_PRICE_TEXT = env("AAI_LANDING_PRICE_TEXT", "49 – 179 lei")
+
+# AI gateway. The key belongs in the environment, never in code or the browser.
+OPENAI_API_KEY = env("OPENAI_API_KEY", "")
+AAI_AI_TIMEOUT_SECONDS = 60
+AAI_AI_MAX_RETRIES = 2
+AAI_AI_RESPONSE_RETENTION_DAYS = 7
+# The fake provider returns synthetic text, so production must never enable it.
+AAI_ALLOW_FAKE_AI = False

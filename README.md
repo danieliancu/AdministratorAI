@@ -2,7 +2,7 @@
 
 Multi-tenant SaaS for Romanian small and medium businesses, built as a Django modular monolith with server-rendered templates, HTMX and Alpine.js on PostgreSQL.
 
-**Status:** Milestone 1 (SaaS foundation) only. The financial modules, AI gateway, legal knowledge base, tax rules and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
+**Status:** Milestones 1 (SaaS foundation) and 2 (AI gateway and cost control) only. The gateway has not yet called a real provider. The financial modules, legal knowledge base, tax rules and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
 
 ## Run it locally
 
@@ -13,6 +13,7 @@ Copy-Item .env.example .env   # then replace every change-me value with a long r
 docker compose up -d --wait
 docker compose exec web python manage.py seed_dev
 docker compose run --rm migrate python manage.py grant_platform_role superadmin superadmin --reason "dev seed"
+docker compose run --rm migrate python manage.py seed_ai_dev   # fake AI provider, invented prices
 ```
 
 | Address | What it is |
@@ -55,8 +56,8 @@ python manage.py check
 ## Documentation
 
 - [Architecture overview](docs/architecture/overview.md), [decisions](docs/architecture/decisions.md), [data model](docs/architecture/data-model.md)
-- [Tenant isolation](docs/security/tenant-isolation.md)
+- [Tenant isolation](docs/security/tenant-isolation.md), [AI cost accounting](docs/ai/cost-accounting.md)
 - [Deployment](docs/operations/deployment.md), [backup and restore](docs/operations/backup-restore.md)
 - [Implementation progress](docs/implementation-progress.md)
 
-The AI, legal, tax and ANAF documents record findings and requirements for later milestones. They describe no working code.
+The legal, tax and ANAF documents record findings and requirements for later milestones. They describe no working code.

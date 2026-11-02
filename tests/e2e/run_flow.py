@@ -136,6 +136,26 @@ def main():
         expect(staff.get_by_text("test E2E").first).to_be_visible()
         staff.screenshot(path=SHOTS / "platform-audit.png", full_page=True)
 
+        # Needs seed_ai_dev. The request goes page -> Redis -> worker -> gateway -> fake provider.
+        demo = session()
+        sign_in(demo, "admin", "1234")
+        demo.get_by_role("link", name="Consum AI").click()
+        expect(demo.get_by_role("heading", name="Consum AI")).to_be_visible()
+        before = demo.get_by_role("row").count()
+        demo.get_by_role("button", name="Rulează testul").click()
+        expect(demo.get_by_text("Testul a fost pus în coadă")).to_be_visible()
+        # The partial refresh every 5 seconds shows the new row without reloading.
+        expect(demo.get_by_role("row")).to_have_count(max(before + 1, 2), timeout=30000)
+        expect(demo.get_by_text("RĂSPUNS SINTETIC").first).to_be_visible()
+        demo.screenshot(path=SHOTS / "tenant-ai-usage.png", full_page=True)
+
+        staff.get_by_role("link", name="Utilizare AI").click()
+        expect(staff.get_by_role("cell", name="Firmă Demo SRL (fictivă)").first).to_be_visible()
+        staff.screenshot(path=SHOTS / "platform-ai-usage.png", full_page=True)
+        staff.get_by_role("link", name="Costuri AI").click()
+        expect(staff.get_by_text("fake:fake-small").first).to_be_visible()
+        staff.screenshot(path=SHOTS / "platform-ai-costs.png", full_page=True)
+
         browser.close()
 
     if errors:

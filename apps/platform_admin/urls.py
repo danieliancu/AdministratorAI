@@ -9,4 +9,9 @@ urlpatterns = [
     path("firme/<uuid:tenant_id>/stare/", views.tenant_status, name="tenant-status"),
     path("utilizatori/", views.user_list, name="users"),
     path("audit/", views.audit_log, name="audit"),
+    path("ai/", views.ai_usage, name="ai-usage"),
+    path("ai/costuri/", views.ai_costs, name="ai-costs"),
+    path("ai/politica/<uuid:tenant_id>/", views.ai_policy, name="ai-policy"),
+    path("ai/rezervari/<uuid:reservation_id>/", views.ai_resolve, name="ai-resolve"),
+    path("ai/reconciliere/", views.ai_reconcile, name="ai-reconcile"),
 ]

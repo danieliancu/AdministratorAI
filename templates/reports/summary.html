@@ -1,0 +1,35 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Rapoarte{% endblock %}
+{% block content %}
+<h1>Rapoarte</h1>
+{% include "components/report_tabs.html" %}
+{% include "components/report_period.html" %}
+{% include "components/report_notice.html" %}
+{% if not vat_confirmed %}<div class="alert alert-warning" role="status">Statutul de plătitor de TVA nu este confirmat în profilul fiscal. Sumele sunt afișate fără TVA; verifică împreună cu contabilul cum se tratează TVA din cheltuieli.</div>{% endif %}
+<section class="card">
+  <h2>Comparație cu perioada anterioară</h2>
+  <p class="muted small">Perioada anterioară: {{ previous_start|date:"d.m.Y" }} – {{ previous_end|date:"d.m.Y" }}</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Indicator</th><th scope="col" class="num">Perioada</th><th scope="col" class="num">Anterior</th><th scope="col" class="num">Diferență</th><th scope="col" class="num">%</th></tr></thead>
+    <tbody>
+    {% for label, c in rows %}
+      <tr><td>{{ label }}</td><td class="num">{{ c.current|lei }}</td><td class="num">{{ c.previous|lei }}</td><td class="num">{{ c.difference|lei }}</td><td class="num">{% if c.percent is not None %}{{ c.percent }}%{% else %}—{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+<section class="card section-gap">
+  <h2>Separat, ca să nu se confunde</h2>
+  <dl class="facts">
+    <dt>Facturat, fără TVA / TVA / cu TVA</dt><dd>{{ figures.invoiced_net|lei }} / {{ figures.invoiced_vat|lei }} / {{ figures.invoiced_gross|lei }} (facturi: {{ figures.invoice_count }})</dd>
+    <dt>Vânzări fără factură, fără TVA / cu TVA</dt><dd>{{ figures.direct_net|lei }} / {{ figures.direct_gross|lei }} ({{ figures.direct_count }})</dd>
+    <dt>Încasat pe facturi / total încasat</dt><dd>{{ figures.received_on_invoices|lei }} / {{ figures.received_total|lei }}</dd>
+    <dt>Cheltuieli, fără TVA / TVA / cu TVA</dt><dd>{{ figures.expenses_net|lei }} / {{ figures.expenses_vat|lei }} / {{ figures.expenses_gross|lei }} ({{ figures.expense_count }})</dd>
+    <dt>Cheltuieli plătite</dt><dd>{{ figures.expenses_paid|lei }}</dd>
+    <dt>Flux net din datele înregistrate</dt><dd>{{ figures.net_cash_flow|lei }}</dd>
+    <dt>Facturi neîncasate la {{ end|date:"d.m.Y" }}</dt><dd>{{ outstanding|lei }}</dd>
+    <dt>Poziție de numerar estimată</dt><dd>{% if cash %}{{ cash.amount|lei }}{% else %}Necunoscută: <a href="{% url 'tenant:opening-cash' request.tenant_access.tenant_id %}">declară soldul inițial</a>{% endif %}</dd>
+    <dt>Rezultat estimat înainte de impozite</dt><dd>{{ figures.estimated_result|lei }}. Nu este profit contabil: nu include impozite, stocuri sau amortizări.</dd>
+  </dl>
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+<div class="alert alert-warning" role="status">
+  Calculat doar din datele introduse sau importate în aplicație. Nu este un rezultat contabil și nu înlocuiește evidența contabilă.
+  {% if empty.sales %}<br>Fără vânzări înregistrate în: {{ empty.sales|join:", " }}.{% endif %}
+  {% if empty.expenses %}<br>Fără cheltuieli înregistrate în: {{ empty.expenses|join:", " }}.{% endif %}
+</div>

@@ -1,0 +1,45 @@
+{% extends "base_tenant.html" %}
+{% block title %}Importuri{% endblock %}
+{% block content %}
+<h1>Importuri</h1>
+{% if can_import %}
+<section class="card form-card">
+  <h2>Încarcă un fișier</h2>
+  <p class="muted small">Întâi vezi ce conține. Nimic nu se salvează până nu confirmi.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">Verifică fișierul</button>
+  </form>
+</section>
+{% endif %}
+<section class="card section-gap">
+  <h2>Coloane așteptate</h2>
+  <p class="muted small">Numerele se scriu 1234,56 sau 1.234,56, iar datele ZZ.LL.AAAA. Numerele ambigue, cum ar fi 1.234, sunt respinse. Doar RON.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Tip</th><th scope="col">Obligatorii</th><th scope="col">Opționale</th><th scope="col">Model</th></tr></thead>
+    <tbody>
+    {% for g in guides %}
+      <tr><td>{{ g.label }}</td><td class="small">{{ g.required|join:", " }}</td><td class="small">{{ g.optional|join:", " }}</td>
+      <td><a href="{% url 'tenant:import-template' request.tenant_access.tenant_id g.kind %}">Descarcă</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+<section class="card section-gap">
+  <h2>Istoric</h2>
+  {% if page.object_list %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Fișier</th><th scope="col">Tip</th><th scope="col">Data</th><th scope="col">Stare</th><th scope="col" class="num">Rânduri</th><th scope="col" class="num">Importate</th></tr></thead>
+    <tbody>
+    {% for b in page %}
+      <tr><td><a href="{% url 'tenant:import-detail' request.tenant_access.tenant_id b.pk %}">{{ b.original_name }}</a></td><td>{{ b.get_kind_display }}</td><td>{{ b.created_at|date:"d.m.Y H:i" }}</td><td>{{ b.get_status_display }}</td><td class="num">{{ b.total_rows }}</td><td class="num">{{ b.imported_rows }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  <p class="muted">Nu ai importat încă niciun fișier.</p>
+  {% endif %}
+</section>
+{% endblock %}

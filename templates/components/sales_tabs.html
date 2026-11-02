@@ -1,0 +1,7 @@
+{% with tid=request.tenant_access.tenant_id active=request.resolver_match.url_name %}
+<nav class="tabs" aria-label="Secțiuni vânzări">
+  <a href="{% url 'tenant:invoice-list' tid %}"{% if active == 'invoice-list' %} aria-current="page"{% endif %}>Facturi</a>
+  <a href="{% url 'tenant:sale-list' tid %}"{% if active == 'sale-list' %} aria-current="page"{% endif %}>Fără factură</a>
+  <a href="{% url 'tenant:customer-list' tid %}"{% if active == 'customer-list' %} aria-current="page"{% endif %}>Clienți</a>
+</nav>
+{% endwith %}

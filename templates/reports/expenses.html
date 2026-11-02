@@ -1,0 +1,25 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Raport cheltuieli{% endblock %}
+{% block content %}
+<h1>Rapoarte</h1>
+{% include "components/report_tabs.html" %}
+{% include "components/report_period.html" %}
+{% include "components/report_notice.html" %}
+<div class="grid">
+  <section class="card"><h2>Pe categorii</h2>{% include "reports/_breakdown.html" with items=categories heading="Categorie" %}</section>
+  <section class="card">
+    <h2>Furnizori principali</h2>
+    {% if suppliers %}<div class="table-wrap"><table>
+      <thead><tr><th scope="col">Furnizor</th><th scope="col" class="num">Documente</th><th scope="col" class="num">Fără TVA</th></tr></thead>
+      <tbody>{% for s in suppliers %}<tr><td>{{ s.supplier }}</td><td class="num">{{ s.n }}</td><td class="num">{{ s.net|lei }}</td></tr>{% endfor %}</tbody>
+    </table></div>{% else %}<p class="muted">Nimic înregistrat în această perioadă.</p>{% endif %}
+  </section>
+</div>
+<section class="card section-gap">
+  <h2>Pe luni</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Luna</th><th scope="col" class="num">Cheltuieli, fără TVA</th></tr></thead>
+    <tbody>{% for r in series %}<tr><td>{{ r.label }}</td><td class="num">{{ r.expenses_net|lei }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

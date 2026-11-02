@@ -1,0 +1,20 @@
+{% extends "base_tenant.html" %}
+{% block title %}Clienți{% endblock %}
+{% block content %}
+{% url 'tenant:customer-list' request.tenant_access.tenant_id as list_url %}
+<div class="topbar compact">
+  <h1>Vânzări</h1>
+  {% if can_edit %}<a class="btn btn-primary" href="{% url 'tenant:customer-new' request.tenant_access.tenant_id %}">Client nou</a>{% endif %}
+</div>
+{% include "components/sales_tabs.html" %}
+<form method="get" class="toolbar" role="search">
+  <div class="field">
+    <label for="q">Caută după nume sau CUI</label>
+    <input id="q" type="search" name="q" value="{{ search }}" hx-get="{{ list_url }}"
+           hx-trigger="input changed delay:300ms, search" hx-target="#results" hx-push-url="true">
+  </div>
+</form>
+<section class="card" id="results" aria-live="polite">
+  {% include "sales/_customer_table.html" %}
+</section>
+{% endblock %}

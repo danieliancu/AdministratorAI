@@ -1,0 +1,39 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Cheltuieli recurente{% endblock %}
+{% block content %}
+{% with tid=request.tenant_access.tenant_id %}
+<div class="topbar compact">
+  <h1>Cheltuieli</h1>
+  {% if can_edit %}<a class="btn btn-primary" href="{% url 'tenant:recurring-new' tid %}">Șablon nou</a>{% endif %}
+</div>
+{% include "components/expense_tabs.html" %}
+{% if missing and can_edit %}
+<div class="alert alert-warning" role="status">
+  <form method="post" action="{% url 'tenant:recurring-generate' tid %}" class="inline-row">
+    {% csrf_token %}
+    <span>Șabloane negenerate pentru luna curentă: {{ missing }}.</span>
+    <button class="btn btn-secondary" type="submit">Generează</button>
+  </form>
+</div>
+{% endif %}
+<section class="card">
+  {% if templates %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Descriere</th><th scope="col">Furnizor</th><th scope="col">Ziua</th><th scope="col" class="num">Total</th><th scope="col">Perioadă</th><th scope="col">Stare</th></tr></thead>
+    <tbody>
+    {% for t in templates %}
+      <tr>
+        <td>{% if can_edit %}<a href="{% url 'tenant:recurring-edit' tid t.pk %}">{{ t.description }}</a>{% else %}{{ t.description }}{% endif %}</td>
+        <td>{{ t.supplier }}</td><td>{{ t.day_of_month }}</td><td class="num">{{ t.gross|lei }}</td>
+        <td>{{ t.first_month|date:"m.Y" }} – {{ t.last_month|date:"m.Y"|default:"fără sfârșit" }}</td>
+        <td>{% if t.is_active %}Activ{% else %}<span class="badge badge-muted">Inactiv</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="muted">Un șablon te scapă de introducerea lunară a cheltuielilor fixe, cum ar fi chiria. Nu înregistrează nimic până nu îl generezi.</p>
+  {% endif %}
+</section>
+{% endwith %}
+{% endblock %}

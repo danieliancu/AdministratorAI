@@ -1,0 +1,6 @@
+{% with tid=request.tenant_access.tenant_id active=request.resolver_match.url_name %}
+<nav class="tabs" aria-label="Secțiuni cheltuieli">
+  <a href="{% url 'tenant:expense-list' tid %}"{% if active == 'expense-list' %} aria-current="page"{% endif %}>Cheltuieli</a>
+  <a href="{% url 'tenant:recurring-list' tid %}"{% if active == 'recurring-list' %} aria-current="page"{% endif %}>Recurente</a>
+</nav>
+{% endwith %}

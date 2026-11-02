@@ -70,3 +70,27 @@ Legal text is shared, so embedding it is charged to `AIPlatformBudget`, not to a
 ## Fewer legal tables than the specification names
 
 `LegalValidation` and `LegalReview` are combined into `LegalChangeEvent` plus the review columns on a version. `LegalAmendment` is a kind of `LegalRelationship`. `LegalImpactAssessment` waits for tax rules in Milestone 4.
+
+## Milestone 5 before Milestone 4
+
+The financial application needs nothing external, while a tax rule cannot become active without a fiscal specialist. Building the records first also gives the rules real inputs.
+
+## Amounts are entered, not calculated
+
+Invoices and expenses store net, VAT and total as written on the document, and the database checks that they add up. Deriving VAT would be a tax calculation with rates and exceptions, which belongs to the rules engine.
+
+## Cancel, never delete
+
+The application role has no `DELETE` on financial records, and stock movements cannot be changed at all. A mistake leaves a trace: a void, a cancellation or a correcting movement, with an audit event.
+
+## Stock is always derived
+
+The stock level is the sum of the movements, with no stored counter that could drift. The product's row lock serialises writers, so concurrent issues cannot go below zero.
+
+## Totals on invoices, no lines yet
+
+Header totals cover the dashboard and reports. Lines add tax treatment per line and a link to stock, and they should be designed with e-Factura in Milestone 7, against real requirements.
+
+## Recurring expenses are generated on request
+
+Nothing appears in a firm's figures unless someone asked for it. A scheduled task would record expenses that may no longer be real, so the dashboard reminds instead.

@@ -1,0 +1,65 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Factura {{ invoice.number }}{% endblock %}
+{% block content %}
+{% with tid=request.tenant_access.tenant_id %}
+<p class="small"><a href="{% url 'tenant:invoice-list' tid %}">Înapoi la facturi</a></p>
+<div class="topbar compact">
+  <h1>Factura {{ invoice.number }} <span class="badge{% if not is_issued %} badge-muted{% endif %}">{{ invoice.get_status_display }}</span></h1>
+  {% if can_edit and is_issued %}
+  <div class="actions">
+    <a class="btn btn-secondary" href="{% url 'tenant:invoice-edit' tid invoice.pk %}">Editează</a>
+    <form method="post" action="{% url 'tenant:invoice-cancel' tid invoice.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Anulează factura</button></form>
+  </div>
+  {% endif %}
+</div>
+<div class="grid">
+  <section class="card">
+    <h2>Document</h2>
+    <dl class="facts">
+      <dt>Client</dt><dd>{{ invoice.customer.name }}{% if invoice.customer.cui %} ({{ invoice.customer.cui }}){% endif %}</dd>
+      <dt>Emisă la</dt><dd>{{ invoice.issue_date|date:"d.m.Y" }}</dd>
+      <dt>Scadență</dt><dd>{{ invoice.due_date|date:"d.m.Y"|default:"—" }}</dd>
+      <dt>Categorie</dt><dd>{{ invoice.category.name|default:"—" }}</dd>
+      <dt>Sursă</dt><dd>{{ invoice.get_source_display }}</dd>
+      {% if invoice.notes %}<dt>Observații</dt><dd>{{ invoice.notes }}</dd>{% endif %}
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Sume</h2>
+    <dl class="facts">
+      <dt>Valoare fără TVA</dt><dd>{{ invoice.net|lei }}</dd>
+      <dt>TVA</dt><dd>{{ invoice.vat|lei }}</dd>
+      <dt>Total</dt><dd>{{ invoice.gross|lei }}</dd>
+      <dt>Încasat</dt><dd>{{ invoice.paid|lei }}</dd>
+      <dt>Rest de încasat</dt><dd><strong>{% if is_issued %}{{ remaining|lei }}{% else %}—{% endif %}</strong></dd>
+    </dl>
+  </section>
+</div>
+<section class="card section-gap">
+  <h2>Încasări</h2>
+  {% if payments %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Data</th><th scope="col" class="num">Sumă</th><th scope="col">Metodă</th><th scope="col">Referință</th><th scope="col">Stare</th></tr></thead>
+    <tbody>
+    {% for p in payments %}
+      <tr>
+        <td>{{ p.date|date:"d.m.Y" }}</td><td class="num">{{ p.amount|lei }}</td><td>{{ p.get_method_display }}</td><td>{{ p.reference|default:"—" }}</td>
+        <td>{% if p.voided_at %}<span class="badge badge-muted">Anulată</span>{% elif can_edit %}<form method="post" action="{% url 'tenant:payment-void' tid p.pk %}">{% csrf_token %}<button class="btn-link" type="submit">Anulează</button></form>{% else %}Activă{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <p class="muted">Nu există încasări înregistrate. O factură emisă nu înseamnă bani primiți.</p>
+  {% endif %}
+  {% if can_edit and is_issued and remaining > 0 %}
+  <h3 class="section-gap">Înregistrează o încasare</h3>
+  <form method="post" class="form-card">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">Salvează încasarea</button>
+  </form>
+  {% endif %}
+</section>
+{% endwith %}
+{% endblock %}

@@ -13,6 +13,16 @@ from django.utils import timezone
 from apps.ai_gateway.models import AIStoredResponse
 from apps.audit.models import TenantEvent
 from apps.core.db.scope import db_scope
+from apps.expenses.models import (
+    Expense,
+    ExpenseCategory,
+    ExpenseDocument,
+    RecurringExpense,
+)
+from apps.financial_imports.models import ImportBatch, ImportRow
+from apps.inventory.models import Product, StockMovement
+from apps.reports.models import OpeningCash
+from apps.sales.models import Customer, Invoice, Payment, SalesCategory, SaleTransaction
 from apps.tenants import services
 from apps.tenants.models import (
     CompanyFiscalProfile,
@@ -56,12 +66,139 @@ def _make_stored_response(tenant, user):
     )
 
 
+MONEY = {"net": 1, "vat": 0, "gross": 1}
+
+
+def _make_customer(tenant, user):
+    return Customer.objects.create(tenant=tenant, name="Secret")
+
+
+def _make_sales_category(tenant, user):
+    return SalesCategory.objects.create(tenant=tenant, name=uuid.uuid4().hex)
+
+
+def _make_invoice(tenant, user):
+    return Invoice.objects.create(
+        tenant=tenant,
+        number=uuid.uuid4().hex,
+        customer=_make_customer(tenant, user),
+        issue_date="2026-03-01",
+        **MONEY,
+    )
+
+
+def _make_payment(tenant, user):
+    return Payment.objects.create(
+        tenant=tenant, invoice=_make_invoice(tenant, user), date="2026-03-01", amount=1
+    )
+
+
+def _make_sale(tenant, user):
+    return SaleTransaction.objects.create(
+        tenant=tenant, date="2026-03-01", description="Secret", **MONEY
+    )
+
+
+def _make_expense_category(tenant, user):
+    return ExpenseCategory.objects.create(tenant=tenant, name=uuid.uuid4().hex)
+
+
+def _make_recurring(tenant, user):
+    return RecurringExpense.objects.create(
+        tenant=tenant, description="S", supplier="S", first_month="2026-03-01", **MONEY
+    )
+
+
+def _make_expense(tenant, user):
+    return Expense.objects.create(tenant=tenant, date="2026-03-01", supplier="Secret", **MONEY)
+
+
+def _make_document(tenant, user):
+    return ExpenseDocument.objects.create(
+        tenant=tenant,
+        expense=_make_expense(tenant, user),
+        original_name="a.pdf",
+        content_type="application/pdf",
+        size=1,
+        file_key="k",
+        sha256="s",
+    )
+
+
+def _make_product(tenant, user):
+    return Product.objects.create(tenant=tenant, sku=uuid.uuid4().hex, name="Secret")
+
+
+def _make_movement(tenant, user):
+    return StockMovement.objects.create(
+        tenant=tenant,
+        product=_make_product(tenant, user),
+        date="2026-03-01",
+        kind="receipt",
+        quantity=1,
+    )
+
+
+def _make_batch(tenant, user):
+    return ImportBatch.objects.create(
+        tenant=tenant,
+        kind="sales",
+        original_name="a.csv",
+        file_key="k",
+        sha256=uuid.uuid4().hex,
+        size=1,
+    )
+
+
+def _make_import_row(tenant, user):
+    return ImportRow.objects.create(
+        tenant=tenant,
+        batch=_make_batch(tenant, user),
+        number=2,
+        raw={"a": "Secret"},
+        status="valid",
+    )
+
+
+def _make_opening_cash(tenant, user):
+    return OpeningCash.objects.create(tenant=tenant, amount=1, as_of="2026-03-01")
+
+
+# Rows the application may never update or delete at all: the attempt is itself an error.
+NO_UPDATE = (AIStoredResponse, ExpenseDocument, StockMovement, ImportRow)
+NO_DELETE = (
+    ExpenseDocument,
+    StockMovement,
+    ImportRow,
+    ImportBatch,
+    Customer,
+    Invoice,
+    Payment,
+    SaleTransaction,
+    Expense,
+    Product,
+)
+
 MODELS = [
     pytest.param(TenantMembership, _membership, id="membership"),
     pytest.param(TenantSettings, _make_settings, id="settings"),
     pytest.param(CompanyFiscalProfile, _make_profile, id="fiscal-profile"),
     pytest.param(TenantInvitation, _make_invitation, id="invitation"),
     pytest.param(AIStoredResponse, _make_stored_response, id="ai-stored-response"),
+    pytest.param(Customer, _make_customer, id="customer"),
+    pytest.param(SalesCategory, _make_sales_category, id="sales-category"),
+    pytest.param(Invoice, _make_invoice, id="invoice"),
+    pytest.param(Payment, _make_payment, id="payment"),
+    pytest.param(SaleTransaction, _make_sale, id="sale"),
+    pytest.param(ExpenseCategory, _make_expense_category, id="expense-category"),
+    pytest.param(RecurringExpense, _make_recurring, id="recurring"),
+    pytest.param(Expense, _make_expense, id="expense"),
+    pytest.param(ExpenseDocument, _make_document, id="expense-document"),
+    pytest.param(Product, _make_product, id="product"),
+    pytest.param(StockMovement, _make_movement, id="stock-movement"),
+    pytest.param(ImportBatch, _make_batch, id="import-batch"),
+    pytest.param(ImportRow, _make_import_row, id="import-row"),
+    pytest.param(OpeningCash, _make_opening_cash, id="opening-cash"),
 ]
 
 
@@ -107,10 +244,10 @@ class TestEveryTenantModel:
         alice, bob, tenant_a, tenant_b = world
         row = _foreign_row(world, make)
         with db_scope(tenant_id=tenant_a.pk, user_id=alice.pk):
-            # Stored AI answers cannot be updated by the application at all.
-            if model is not AIStoredResponse:
+            if model not in NO_UPDATE:
                 assert model.objects.filter(pk=row.pk).update(tenant_id=tenant_a.pk) == 0
-            assert model.objects.filter(pk=row.pk).delete()[0] == 0
+            if model not in NO_DELETE:
+                assert model.objects.filter(pk=row.pk).delete()[0] == 0
         with db_scope(tenant_id=tenant_b.pk, user_id=bob.pk):
             assert model.objects.filter(pk=row.pk).exists()
 

@@ -71,7 +71,7 @@ Each of these passed the unit tests at the time, and a regression test now cover
 - Platform "Create tenant" requires the owner to already have an account.
 - The landing page has no photographs: the ones in the design reference are not usable assets.
 - The price on the landing page is provisional text from the design reference.
-- CI is written but has never run, because there is no remote.
+- CI first ran after the repository reached GitHub on 2 November 2026, and failed. See Milestone 5.
 - `mypy` is not configured.
 - Docker Desktop lists Windows 10 22H2 only while it is within Microsoft's servicing timeline, so this machine may stop receiving updates.
 
@@ -189,3 +189,70 @@ Real data in the development database: 4 acts, of which 3 are usable, and 9 docu
 ### Next: Milestone 4, tax rules engine
 
 Needs a fiscal specialist before any rule can become active.
+
+## Milestone 5: financial application
+
+Built before Milestone 4, which needs a fiscal specialist before any rule can become active.
+
+**State: acceptance criteria met on test data. No real accounting export has been imported.** Users can manage company data and read clearly labelled figures, with no AI involved. See [financial figures](financial/figures.md).
+
+### Implemented
+
+- Sales: customers, invoices with separate payments, sales without an invoice, categories.
+- Expenses: records, categories, supporting documents, recurring templates generated on request.
+- Inventory: products, append-only movements, derived stock levels, low-stock alerts.
+- CSV and Excel imports for 7 kinds of data, with preview, duplicate detection, original rows kept, and a file of rejected rows to correct.
+- Dashboard with labelled figures, alerts, a 12-month chart and the same numbers as a table.
+- Reports: summary with period comparison, sales, expenses, receivables by age, inventory, each with CSV export.
+- Roles: all can read; Member records; Accountant, Administrator and Owner also import.
+- Friendlier page for an expired form, after a report of a technical 403 on sign-out.
+
+### Migrations
+
+`financial_imports` 0001–0002, `sales` 0001–0002, `expenses` 0001–0003, `inventory` 0001–0002, `reports` 0001–0002. Applied to the development database. New dependency: `openpyxl`, so rebuild the images. Chart.js 4.4.9 is vendored in `static/vendor`.
+
+### Tests executed on 2 November 2026
+
+| Check | Result |
+|---|---|
+| `pytest` as `aai_app` | 533 passed |
+| Isolation matrix | Extended to all 14 new tables |
+| Mutation: no row lock on the invoice when paying | Concurrency test failed; reverted |
+| Mutation: no row lock on the product when issuing | Concurrency test failed; reverted |
+| Browser flow in Chromium | Passed: customer, invoice, payment, real CSV upload, preview, commit, dashboard, chart values, no sideways scroll at 400 px on 6 pages |
+| Chart palette validator | All checks pass in light mode |
+| `ruff check` | Clean |
+| `makemigrations --check` | No changes |
+| `pip-audit` on `requirements.lock` | No known vulnerabilities |
+| GitHub Actions | **Failing at the last run.** See below |
+
+### Defects found by running
+
+- **`0,125` was read as 125.** The thousands pattern accepted a leading zero. A financial misread caught by a unit test before any use.
+- **The receivables report counted later payments.** It disagreed with the unpaid total at a past date. Caught by a test requiring the two to match.
+- **Two uploads of one file at the same moment collided** on a shared temporary file. The legal document store had the same pattern, and both are fixed.
+- **Original columns appeared sorted.** `jsonb` reorders keys, so the preview now follows the file's header order.
+
+### CI
+
+The first runs on GitHub failed at the lint step, with exit code 2. Reproduced locally: the container user cannot write to a checkout owned by the runner's user, so `ruff` cannot create its cache. The workflow now opens the permissions first. **This fix has not run on GitHub yet, and the steps after lint have never run there.**
+
+### Security considerations
+
+- Uploaded documents are identified by content, limited in size, and always downloaded as attachments, so they cannot run in the application's origin.
+- Exported text cannot run as a spreadsheet formula.
+- Excel files are checked for decompression bombs before parsing.
+- Files are stored under the firm's folder, and reads check that prefix as well as the row's visibility. Row-level security does not cover the disk, so this check is what protects it.
+
+### Known limitations
+
+See [financial figures](financial/figures.md). The main ones: invoices have no lines, so sales do not reduce stock; credit notes are refused; RON only; a whole import cannot be undone; no real accounting export format has been tested.
+
+### Remaining dependencies
+
+- Sample exports from the accounting systems firms really use.
+- A fiscal specialist's view on VAT in the estimated result.
+
+### Next: Milestone 4, tax rules engine
+
+Needs a fiscal specialist before any rule can become active. Milestone 6, the assistant, needs an OpenAI key and can use these figures.

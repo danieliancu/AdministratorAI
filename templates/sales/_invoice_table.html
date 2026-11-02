@@ -1,0 +1,25 @@
+{% load money %}{% if page.object_list %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Număr</th><th scope="col">Client</th><th scope="col">Emisă</th><th scope="col">Scadență</th><th scope="col" class="num">Total</th><th scope="col" class="num">Încasat</th><th scope="col">Stare</th></tr></thead>
+    <tbody>
+    {% for i in page %}
+      <tr>
+        <td><a href="{% url 'tenant:invoice-detail' request.tenant_access.tenant_id i.pk %}">{{ i.number }}</a></td>
+        <td>{{ i.customer.name }}</td>
+        <td>{{ i.issue_date|date:"d.m.Y" }}</td>
+        <td>{{ i.due_date|date:"d.m.Y"|default:"—" }}</td>
+        <td class="num">{{ i.gross|lei }}</td>
+        <td class="num">{{ i.paid|lei }}</td>
+        <td><span class="badge{% if i.status == 'cancelled' %} badge-muted{% endif %}">{{ i.get_status_display }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% elif search or state %}
+<p class="muted">Nicio factură nu corespunde căutării.</p>
+{% else %}
+<p class="muted">Nu ai înregistrat încă nicio factură. Adaugă una sau <a href="{% url 'tenant:import-list' request.tenant_access.tenant_id %}">importă un fișier</a>.</p>
+{% endif %}

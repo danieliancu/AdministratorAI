@@ -11,6 +11,7 @@ import sys
 import urllib.parse
 import urllib.request
 import uuid
+from datetime import date
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
@@ -51,6 +52,81 @@ def sign_in(page, login, password=PASSWORD):
     page.get_by_label("Email sau utilizator").fill(login)
     page.get_by_label("Parolă").fill(password)
     page.get_by_role("button", name="Intră în cont").click()
+
+
+def finance_flow(page, run):
+    """Create records by hand and by import, then read them back on the dashboard."""
+    errors_before = []
+
+    def keep_real_errors(message):
+        # This header needs HTTPS or localhost, and the test browser reaches http://web.
+        if message.type == "error" and "Cross-Origin-Opener-Policy" not in message.text:
+            errors_before.append(message.text)
+
+    page.on("console", keep_real_errors)
+    expect(page.get_by_text("Nu există încă date pentru grafic")).to_be_visible()
+
+    page.get_by_role("link", name="Vânzări", exact=True).click()
+    page.get_by_role("link", name="Clienți").click()
+    page.get_by_role("link", name="Client nou").click()
+    page.get_by_label("Denumire").fill("Client E2E SRL")
+    page.get_by_role("button", name="Salvează").click()
+    expect(page.get_by_text("Clientul a fost adăugat")).to_be_visible()
+
+    today = date.today().isoformat()
+    page.get_by_role("link", name="Vânzări", exact=True).click()
+    page.get_by_role("link", name="Factură nouă").click()
+    page.get_by_label("Număr").fill(f"E2E-{run}")
+    page.get_by_label("Client").select_option(label="Client E2E SRL")
+    page.get_by_label("Data emiterii").fill(today)
+    page.get_by_label("Valoare fără TVA").fill("1.000,00")
+    page.get_by_label(re.compile("^TVA")).fill("190,00")
+    page.get_by_label("Total").fill("1.190,00")
+    page.get_by_role("button", name="Salvează factura").click()
+    expect(page.get_by_text("a fost înregistrată")).to_be_visible()
+    page.get_by_label("Sumă încasată").fill("190")
+    page.get_by_role("button", name="Salvează încasarea").click()
+    expect(page.get_by_text("Încasarea a fost înregistrată")).to_be_visible()
+    expect(page.get_by_text("1.000,00 lei").first).to_be_visible()
+
+    page.get_by_role("link", name="Importuri").click()
+    page.get_by_label("Ce imporți").select_option("expenses")
+    content = (
+        "data;furnizor;numar_document;categorie;net;tva;total\n"
+        f"{date.today():%d.%m.%Y};Enel;A1;Utilități;100,00;19,00;119,00\n"
+        f"{date.today():%d.%m.%Y};Greșit;A2;;10,00;0,00;11,00\n"
+    )
+    page.get_by_label("Fișier").set_input_files(
+        {"name": "cheltuieli.csv", "mimeType": "text/csv", "buffer": content.encode()}
+    )
+    page.get_by_role("button", name="Verifică fișierul").click()
+    expect(page.get_by_text("Nu dovedește că datele contabile")).to_be_visible()
+    page.screenshot(path=SHOTS / "import-preview.png", full_page=True)
+    page.get_by_role("button", name="Importă rândurile valide (1)").click()
+    expect(page.get_by_text("Rânduri importate: 1")).to_be_visible()
+
+    page.get_by_role("link", name="Prezentare generală").click()
+    expect(page.get_by_text("1.000,00 lei").first).to_be_visible()
+    expect(page.get_by_text("Nu este profit contabil")).to_be_visible()
+    expect(page.locator("canvas")).to_be_visible()
+    page.wait_for_function("window.Chart && Object.keys(window.Chart.instances).length === 1")
+    drawn = page.evaluate(
+        "Object.values(window.Chart.instances)[0].data.datasets.map(d => d.data.at(-1))"
+    )
+    assert drawn == [1000, 100], drawn
+    page.get_by_text("Vezi cifrele ca tabel").click()
+    page.screenshot(path=SHOTS / "finance-dashboard.png", full_page=True)
+
+    page.set_viewport_size({"width": 400, "height": 800})
+    for route in ("", "vanzari/", "cheltuieli/", "stocuri/", "importuri/", "rapoarte/"):
+        page.goto(page.url.split("/t/")[0] + "/t/" + page.url.split("/t/")[1].split("/")[0] + "/" + route)
+        overflow = page.evaluate(
+            "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+        )
+        assert overflow <= 0, f"{route} scrolls sideways at 400px by {overflow}px"
+    page.screenshot(path=SHOTS / "finance-mobile.png", full_page=True)
+    page.set_viewport_size({"width": 1280, "height": 900})
+    assert not errors_before, errors_before
 
 
 def main():
@@ -94,6 +170,9 @@ def main():
         dashboard = page.url
         page.screenshot(path=SHOTS / "tenant-dashboard.png", full_page=True)
 
+        finance_flow(page, run)
+
+        page.goto(dashboard)
         page.get_by_role("link", name="Membri").click()
         page.get_by_label("Email").fill(colleague)
         page.get_by_label("Rol").select_option("accountant")

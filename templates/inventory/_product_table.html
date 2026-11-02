@@ -1,0 +1,24 @@
+{% load money %}{% if page.object_list %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Cod</th><th scope="col">Denumire</th><th scope="col" class="num">Stoc</th><th scope="col">UM</th><th scope="col" class="num">Prag</th><th scope="col">Stare</th></tr></thead>
+    <tbody>
+    {% for p in page %}
+      <tr>
+        <td><a href="{% url 'tenant:product-detail' request.tenant_access.tenant_id p.pk %}">{{ p.sku }}</a></td>
+        <td>{{ p.name }}</td>
+        <td class="num">{{ p.stock|quantity }}</td>
+        <td>{{ p.unit }}</td>
+        <td class="num">{{ p.reorder_threshold|quantity }}</td>
+        <td>{% if not p.is_active %}<span class="badge badge-muted">Inactiv</span>{% elif p.reorder_threshold is not None and p.stock <= p.reorder_threshold %}<span class="badge badge-warning">Stoc redus</span>{% else %}În regulă{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% elif search or only_low %}
+<p class="muted">Niciun produs nu corespunde filtrelor.</p>
+{% else %}
+<p class="muted">Nu ai adăugat încă niciun produs. Stocul se calculează din mișcările de intrare și ieșire.</p>
+{% endif %}

@@ -1,0 +1,23 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Creanțe{% endblock %}
+{% block content %}
+<h1>Rapoarte</h1>
+{% include "components/report_tabs.html" %}
+<div class="actions section-gap"><a class="btn btn-secondary" href="?export=csv">Descarcă CSV</a></div>
+<p class="muted">Facturi neîncasate la {{ as_of|date:"d.m.Y" }}, din încasările înregistrate. O factură fără scadență apare ca nescadentă.</p>
+<div class="stats">
+  {% for b in report.buckets %}<div class="stat"><span class="stat-label">{{ b.label }}</span><span class="stat-value">{{ b.total|lei }}</span><span class="stat-note">Facturi: {{ b.count }}</span></div>{% endfor %}
+</div>
+<section class="card section-gap">
+  {% if report.invoices %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Factură</th><th scope="col">Client</th><th scope="col">Scadență</th><th scope="col" class="num">Total</th><th scope="col" class="num">Rest</th><th scope="col" class="num">Zile întârziere</th></tr></thead>
+    <tbody>
+    {% for i in report.invoices %}
+      <tr><td><a href="{% url 'tenant:invoice-detail' request.tenant_access.tenant_id i.pk %}">{{ i.number }}</a></td><td>{{ i.customer.name }}</td><td>{{ i.due_date|date:"d.m.Y"|default:"—" }}</td><td class="num">{{ i.gross|lei }}</td><td class="num">{{ i.remaining|lei }}</td><td class="num">{{ i.days_overdue }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="muted">Nicio factură neîncasată.</p>{% endif %}
+</section>
+{% endblock %}

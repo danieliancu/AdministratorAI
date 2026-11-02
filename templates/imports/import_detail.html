@@ -1,0 +1,56 @@
+{% extends "base_tenant.html" %}
+{% block title %}Import {{ batch.original_name }}{% endblock %}
+{% block content %}
+{% with tid=request.tenant_access.tenant_id %}
+<p class="small"><a href="{% url 'tenant:import-list' tid %}">Înapoi la importuri</a></p>
+<h1>{{ batch.original_name }} <span class="badge">{{ batch.get_status_display }}</span></h1>
+<p class="muted">{{ batch.get_kind_display }}, încărcat la {{ batch.created_at|date:"d.m.Y H:i" }}.</p>
+<div class="stats">
+  <div class="stat"><span class="stat-label">Rânduri</span><span class="stat-value">{{ batch.total_rows }}</span></div>
+  {% if is_preview %}<div class="stat"><span class="stat-label">Valide</span><span class="stat-value">{{ batch.valid_rows }}</span></div>
+  {% else %}<div class="stat"><span class="stat-label">Importate</span><span class="stat-value">{{ batch.imported_rows }}</span></div>{% endif %}
+  <div class="stat"><span class="stat-label">Duplicate</span><span class="stat-value">{{ batch.duplicate_rows }}</span></div>
+  <div class="stat"><span class="stat-label">Cu erori</span><span class="stat-value">{{ rejected }}</span></div>
+</div>
+<div class="alert alert-warning section-gap" role="status">Un import reușit arată doar că rândurile din fișier au fost citite. Nu dovedește că datele contabile ale firmei sunt complete.</div>
+<div class="actions section-gap">
+  {% if is_preview and can_import %}
+    {% if batch.valid_rows %}
+    <form method="post" action="{% url 'tenant:import-commit' tid batch.pk %}">{% csrf_token %}<button class="btn btn-primary" type="submit">Importă rândurile valide ({{ batch.valid_rows }})</button></form>
+    {% endif %}
+    <form method="post" action="{% url 'tenant:import-discard' tid batch.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Renunță</button></form>
+  {% endif %}
+  {% if rejected %}<a class="btn btn-secondary" href="{% url 'tenant:import-rejected' tid batch.pk %}">Descarcă rândurile cu erori</a>{% endif %}
+</div>
+<form method="get" class="toolbar section-gap">
+  <div class="field">
+    <label for="stare">Afișează</label>
+    <select id="stare" name="stare" onchange="this.form.submit()">
+      <option value="">Toate rândurile</option>
+      {% for value, label in states %}<option value="{{ value }}"{% if state == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <noscript><button class="btn btn-secondary" type="submit">Filtrează</button></noscript>
+</form>
+<section class="card">
+  {% if page.object_list %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Rând</th><th scope="col">Stare</th><th scope="col">Observații</th><th scope="col">Conținut original</th></tr></thead>
+    <tbody>
+    {% for row in page %}
+      <tr>
+        <td>{{ row.number }}</td>
+        <td><span class="badge{% if row.status == 'invalid' or row.status == 'failed' %} badge-warning{% elif row.status == 'duplicate' %} badge-muted{% endif %}">{{ row.get_status_display }}</span></td>
+        <td class="small">{% for e in row.errors %}{{ e }}<br>{% endfor %}</td>
+        <td class="small muted">{% for value in row.cells %}{{ value|default_if_none:"" }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  <p class="muted">Niciun rând cu această stare.</p>
+  {% endif %}
+</section>
+{% endwith %}
+{% endblock %}

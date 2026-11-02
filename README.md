@@ -2,7 +2,7 @@
 
 Multi-tenant SaaS for Romanian small and medium businesses, built as a Django modular monolith with server-rendered templates, HTMX and Alpine.js on PostgreSQL.
 
-**Status:** Milestones 1 to 3 only: SaaS foundation, AI gateway, legal knowledge infrastructure. No real AI provider has been called, and the fiscal corpus has no consolidated text yet. The financial modules, tax rules, assistant and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
+**Status:** Milestones 1, 2, 3 and 5: SaaS foundation, AI gateway, legal knowledge infrastructure, financial application. No real AI provider has been called, and the fiscal corpus has no consolidated text yet. Tax rules, the fiscal calendar, the assistant and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
 
 ## Run it locally
 
@@ -24,7 +24,7 @@ docker compose run --rm migrate python manage.py seed_ai_dev   # fake AI provide
 | http://localhost:8000/platform/ | Platform administration |
 | http://localhost:8025/ | Mailpit: emails sent in development |
 
-`seed_dev` creates two development accounts, both with the password `1234`. It refuses to run outside the development settings.
+`seed_dev` creates two development accounts, both with the password `1234`. It refuses to run outside the development settings. `docker compose exec web python manage.py seed_finance_dev` adds fictional invoices, expenses and products to the demo firm, under the same restriction.
 
 | Login | Access |
 |---|---|

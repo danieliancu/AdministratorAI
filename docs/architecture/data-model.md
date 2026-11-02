@@ -30,6 +30,18 @@ Covers tables that exist today. `apps/core/db/manifest.py` is the authoritative 
 | `legal_knowledge_legalactversion` | global | Immutable except the review columns, which only a superadmin's decision changes |
 | `legal_knowledge_legalapplicability` | global | Append-only history of when a version applied in law. See [versioning](../legal/versioning.md) |
 | `legal_knowledge_legalsyncjob`, `legalchangeevent` | platform only | Sync history and the review queue |
+| `sales_customer`, `sales_salescategory` | tenant | CUI unique per firm when present. Customers cannot be deleted |
+| `sales_invoice` | tenant | Number unique per firm, kept after cancelling. Total must equal net plus VAT. No delete |
+| `sales_payment` | tenant | Cash received, separate from the invoice. Voided, never deleted |
+| `sales_saletransaction` | tenant | Sale without an invoice, paid on the spot. No delete |
+| `expenses_expensecategory`, `expenses_recurringexpense` | tenant | A template records nothing until generated |
+| `expenses_expense` | tenant | One per template and month. No delete |
+| `expenses_expensedocument` | tenant | Metadata of an uploaded file. No update or delete |
+| `inventory_product` | tenant | SKU unique per firm. Stock is derived, never stored. No delete |
+| `inventory_stockmovement` | tenant | Append-only. The sign must match the kind |
+| `financial_imports_importbatch` | tenant | One live batch per firm, kind and file checksum. No delete |
+| `financial_imports_importrow` | tenant | Original cells cannot be changed; only outcome columns can |
+| `reports_openingcash` | tenant | One per firm. Declared by the user, unverified |
 | `django_session`, `django_content_type`, `auth_permission`, `django_migrations` | system | No tenant data. Explicit minimal grants |
 | `auth_group`, `auth_group_permissions` | system | Unused, no grants |
 

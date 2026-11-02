@@ -1,6 +1,7 @@
 """Object storage adapter for original documents. Local disk now, replaceable later."""
 
 import hashlib
+import uuid
 from pathlib import Path
 
 from django.conf import settings
@@ -26,7 +27,7 @@ class LocalObjectStore(ObjectStore):
         path = self.root / key
         if not path.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
-            temporary = path.with_suffix(".tmp")
+            temporary = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
             temporary.write_bytes(content)
             temporary.replace(path)
         return key, checksum

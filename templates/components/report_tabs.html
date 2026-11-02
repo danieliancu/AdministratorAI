@@ -1,0 +1,9 @@
+{% with tid=request.tenant_access.tenant_id %}
+<nav class="tabs" aria-label="Rapoarte">
+  <a href="{% url 'tenant:report-summary' tid %}"{% if active_report == 'summary' %} aria-current="page"{% endif %}>Sumar</a>
+  <a href="{% url 'tenant:report-sales' tid %}"{% if active_report == 'sales' %} aria-current="page"{% endif %}>Vânzări</a>
+  <a href="{% url 'tenant:report-expenses' tid %}"{% if active_report == 'expenses' %} aria-current="page"{% endif %}>Cheltuieli</a>
+  <a href="{% url 'tenant:report-receivables' tid %}"{% if active_report == 'receivables' %} aria-current="page"{% endif %}>Creanțe</a>
+  <a href="{% url 'tenant:report-inventory' tid %}"{% if active_report == 'inventory' %} aria-current="page"{% endif %}>Stocuri</a>
+</nav>
+{% endwith %}

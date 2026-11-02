@@ -1,0 +1,28 @@
+{% extends "base_tenant.html" %}
+{% block title %}Stocuri{% endblock %}
+{% block content %}
+{% url 'tenant:product-list' request.tenant_access.tenant_id as list_url %}
+<div class="topbar compact">
+  <h1>Stocuri</h1>
+  {% if can_edit %}<a class="btn btn-primary" href="{% url 'tenant:product-new' request.tenant_access.tenant_id %}">Produs nou</a>{% endif %}
+</div>
+<form method="get" class="toolbar" role="search">
+  <div class="field">
+    <label for="q">Caută după cod sau denumire</label>
+    <input id="q" type="search" name="q" value="{{ search }}" hx-get="{{ list_url }}"
+           hx-trigger="input changed delay:300ms, search" hx-target="#results"
+           hx-include="closest form" hx-push-url="true">
+  </div>
+  <div class="field">
+    <label for="filtru">Afișează</label>
+    <select id="filtru" name="filtru" hx-get="{{ list_url }}" hx-target="#results"
+            hx-include="closest form" hx-push-url="true">
+      <option value="">Toate produsele</option>
+      <option value="stoc-redus"{% if only_low %} selected{% endif %}>Stoc redus</option>
+    </select>
+  </div>
+</form>
+<section class="card" id="results" aria-live="polite">
+  {% include "inventory/_product_table.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Raport stocuri{% endblock %}
+{% block content %}
+<h1>Rapoarte</h1>
+{% include "components/report_tabs.html" %}
+{% include "components/report_period.html" %}
+<div class="stats">
+  <div class="stat"><span class="stat-label">Valoare estimată a stocului</span><span class="stat-value">{{ report.value|lei }}</span><span class="stat-note">Cantitate calculată, înmulțită cu costul declarat. Nu este o evaluare contabilă.</span></div>
+  {% if report.without_cost %}<div class="stat"><span class="stat-label">Produse în stoc fără cost</span><span class="stat-value">{{ report.without_cost }}</span><span class="stat-note">Nu intră în valoarea de mai sus.</span></div>{% endif %}
+</div>
+<section class="card section-gap">
+  {% if report.rows %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Cod</th><th scope="col">Produs</th><th scope="col" class="num">Stoc</th><th scope="col" class="num">Intrări</th><th scope="col" class="num">Ieșiri</th><th scope="col" class="num">Ajustări</th><th scope="col" class="num">Valoare estimată</th></tr></thead>
+    <tbody>
+    {% for r in report.rows %}
+      <tr><td><a href="{% url 'tenant:product-detail' request.tenant_access.tenant_id r.product.pk %}">{{ r.product.sku }}</a></td><td>{{ r.product.name }}{% if r.is_low %} <span class="badge badge-warning">Stoc redus</span>{% endif %}</td><td class="num">{{ r.product.stock|quantity }}</td><td class="num">{{ r.received|quantity }}</td><td class="num">{{ r.issued|quantity }}</td><td class="num">{{ r.adjusted|quantity }}</td><td class="num">{{ r.value|lei }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="muted">Niciun produs activ.</p>{% endif %}
+</section>
+{% endblock %}

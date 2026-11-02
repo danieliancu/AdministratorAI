@@ -1,0 +1,25 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Raport vânzări{% endblock %}
+{% block content %}
+<h1>Rapoarte</h1>
+{% include "components/report_tabs.html" %}
+{% include "components/report_period.html" %}
+{% include "components/report_notice.html" %}
+<div class="grid">
+  <section class="card"><h2>Pe categorii</h2>{% include "reports/_breakdown.html" with items=categories heading="Categorie" %}</section>
+  <section class="card">
+    <h2>Clienți principali, din facturi</h2>
+    {% if customers %}<div class="table-wrap"><table>
+      <thead><tr><th scope="col">Client</th><th scope="col" class="num">Facturi</th><th scope="col" class="num">Fără TVA</th></tr></thead>
+      <tbody>{% for c in customers %}<tr><td>{{ c.customer__name }}</td><td class="num">{{ c.n }}</td><td class="num">{{ c.net|lei }}</td></tr>{% endfor %}</tbody>
+    </table></div>{% else %}<p class="muted">Nicio factură în această perioadă.</p>{% endif %}
+  </section>
+</div>
+<section class="card section-gap">
+  <h2>Pe luni</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Luna</th><th scope="col" class="num">Venituri, fără TVA</th><th scope="col" class="num">Încasat</th></tr></thead>
+    <tbody>{% for r in series %}<tr><td>{{ r.label }}</td><td class="num">{{ r.revenue_net|lei }}</td><td class="num">{{ r.received|lei }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

@@ -13,6 +13,11 @@ Administrator AI is a Django modular monolith. Pages are server-rendered, with H
 | `apps.platform_admin` | The `/platform/` area, on its own database role |
 | `apps.ai_gateway` | The only path to AI providers: budgets, reservations, versioned prices and prompts |
 | `apps.legal_knowledge` | Source connectors, versioned legal corpus, parsing, embeddings and date-aware retrieval |
+| `apps.sales` | Customers, invoices, payments, sales without an invoice |
+| `apps.expenses` | Expenses, recurring templates, supporting documents |
+| `apps.inventory` | Products and append-only stock movements |
+| `apps.financial_imports` | CSV and Excel previews, deduplication, original rows |
+| `apps.reports` | Every calculated figure, the dashboard, reports and exports. See [figures](../financial/figures.md) |
 
 ## Request flow
 

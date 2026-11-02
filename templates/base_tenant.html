@@ -5,21 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ request.tenant_access.tenant_name }}{% endblock %} · Administrator AI</title>
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script defer src="{% static 'vendor/htmx-2.0.4.min.js' %}"></script>
+  {% block head %}{% endblock %}
 </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 <div class="app">
   <aside class="sidebar">
     {% include "components/brand.html" %}
-    {% with tid=request.tenant_access.tenant_id active=request.resolver_match.url_name %}
+    {% with tid=request.tenant_access.tenant_id active=active_section|default:request.resolver_match.url_name %}
     <nav aria-label="Meniul firmei">
       <ul class="side-nav">
         <li><a href="{% url 'tenant:dashboard' tid %}"{% if active == 'dashboard' %} aria-current="page"{% endif %}>Prezentare generală</a></li>
-        <li><span class="soon">Vânzări <em>în curând</em></span></li>
-        <li><span class="soon">Cheltuieli <em>în curând</em></span></li>
-        <li><span class="soon">Stocuri <em>în curând</em></span></li>
+        <li><a href="{% url 'tenant:invoice-list' tid %}"{% if active == 'invoice-list' %} aria-current="page"{% endif %}>Vânzări</a></li>
+        <li><a href="{% url 'tenant:expense-list' tid %}"{% if active == 'expense-list' %} aria-current="page"{% endif %}>Cheltuieli</a></li>
+        <li><a href="{% url 'tenant:product-list' tid %}"{% if active == 'product-list' %} aria-current="page"{% endif %}>Stocuri</a></li>
+        <li><a href="{% url 'tenant:report-summary' tid %}"{% if active == 'report-summary' %} aria-current="page"{% endif %}>Rapoarte</a></li>
+        <li><a href="{% url 'tenant:import-list' tid %}"{% if active == 'import-list' %} aria-current="page"{% endif %}>Importuri</a></li>
         <li><span class="soon">Calendar fiscal <em>în curând</em></span></li>
         <li><span class="soon">Asistent AI <em>în curând</em></span></li>
-        <li><span class="soon">Rapoarte <em>în curând</em></span></li>
         <li><span class="soon">Integrări <em>în curând</em></span></li>
         <li><a href="{% url 'tenant:fiscal-profile' tid %}"{% if active == 'fiscal-profile' %} aria-current="page"{% endif %}>Profil fiscal</a></li>
         <li><a href="{% url 'tenant:members' tid %}"{% if active == 'members' %} aria-current="page"{% endif %}>Membri</a></li>

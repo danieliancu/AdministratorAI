@@ -1,0 +1,25 @@
+{% load money %}{% if page.object_list %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Data</th><th scope="col">Descriere</th><th scope="col">Categorie</th><th scope="col" class="num">Fără TVA</th><th scope="col" class="num">Total încasat</th><th scope="col">Acțiuni</th></tr></thead>
+    <tbody>
+    {% for s in page %}
+      <tr>
+        <td>{{ s.date|date:"d.m.Y" }}</td>
+        <td>{{ s.description }}{% if s.reference %}<br><span class="small muted">{{ s.reference }}</span>{% endif %}</td>
+        <td>{{ s.category.name|default:"—" }}</td>
+        <td class="num">{{ s.net|lei }}</td>
+        <td class="num">{{ s.gross|lei }}</td>
+        <td>{% if s.voided_at %}<span class="badge badge-muted">Anulată</span>{% elif can_edit %}<a href="{% url 'tenant:sale-edit' request.tenant_access.tenant_id s.pk %}">Editează</a>
+          <form method="post" class="inline" action="{% url 'tenant:sale-void' request.tenant_access.tenant_id s.pk %}">{% csrf_token %}<button class="btn-link" type="submit">Anulează</button></form>{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% elif search %}
+<p class="muted">Nicio vânzare nu corespunde căutării.</p>
+{% else %}
+<p class="muted">Aici intră vânzările care nu au factură în aplicație, de exemplu totalurile zilnice de pe casa de marcat.</p>
+{% endif %}

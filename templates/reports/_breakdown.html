@@ -1,0 +1,6 @@
+{% load money %}{% if items %}
+<div class="table-wrap"><table>
+  <thead><tr><th scope="col">{{ heading }}</th><th scope="col" class="num">Fără TVA</th></tr></thead>
+  <tbody>{% for name, total in items %}<tr><td>{{ name }}</td><td class="num">{{ total|lei }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">Nimic înregistrat în această perioadă.</p>{% endif %}

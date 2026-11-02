@@ -1,0 +1,25 @@
+{% load money %}{% if page.object_list %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Data</th><th scope="col">Furnizor</th><th scope="col">Document</th><th scope="col">Categorie</th><th scope="col" class="num">Fără TVA</th><th scope="col" class="num">Total</th><th scope="col">Plată</th></tr></thead>
+    <tbody>
+    {% for e in page %}
+      <tr>
+        <td>{{ e.date|date:"d.m.Y" }}</td>
+        <td><a href="{% url 'tenant:expense-detail' request.tenant_access.tenant_id e.pk %}">{{ e.supplier }}</a></td>
+        <td>{{ e.document_number|default:"—" }}</td>
+        <td>{{ e.category.name|default:"—" }}</td>
+        <td class="num">{{ e.net|lei }}</td>
+        <td class="num">{{ e.gross|lei }}</td>
+        <td>{% if e.voided_at %}<span class="badge badge-muted">Anulată</span>{% elif e.paid_date %}{{ e.paid_date|date:"d.m.Y" }}{% else %}<span class="badge badge-warning">Neplătită</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% elif search or state %}
+<p class="muted">Nicio cheltuială nu corespunde căutării.</p>
+{% else %}
+<p class="muted">Nu ai înregistrat încă nicio cheltuială. Adaug-o manual sau <a href="{% url 'tenant:import-list' request.tenant_access.tenant_id %}">importă un fișier</a>.</p>
+{% endif %}

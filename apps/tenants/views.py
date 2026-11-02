@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.audit.services import record_tenant_event
+from apps.reports.dashboard import dashboard_context
 
 from . import roles, services
 from .forms import FiscalProfileForm, InviteForm, TenantCreateForm, TenantNameForm
@@ -67,6 +68,8 @@ def dashboard(request, tenant_id):
         {
             "profile_incomplete": profile is not None and not profile.cui,
             "can_edit_profile": request.tenant_access.can(roles.EDIT_FISCAL_PROFILE),
+            "can_edit_finance": request.tenant_access.can(roles.EDIT_FINANCE),
+            **dashboard_context(request),
         },
     )
 

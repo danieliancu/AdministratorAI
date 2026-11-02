@@ -1,0 +1,52 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}Cheltuială{% endblock %}
+{% block content %}
+{% with tid=request.tenant_access.tenant_id %}
+<p class="small"><a href="{% url 'tenant:expense-list' tid %}">Înapoi la cheltuieli</a></p>
+<div class="topbar compact">
+  <h1>{{ expense.supplier }}{% if expense.voided_at %} <span class="badge badge-muted">Anulată</span>{% endif %}</h1>
+  {% if can_edit and not expense.voided_at %}
+  <div class="actions">
+    <a class="btn btn-secondary" href="{% url 'tenant:expense-edit' tid expense.pk %}">Editează</a>
+    <form method="post" action="{% url 'tenant:expense-void' tid expense.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Anulează cheltuiala</button></form>
+  </div>
+  {% endif %}
+</div>
+<div class="grid">
+  <section class="card">
+    <h2>Document</h2>
+    <dl class="facts">
+      <dt>Data</dt><dd>{{ expense.date|date:"d.m.Y" }}</dd>
+      <dt>Număr</dt><dd>{{ expense.document_number|default:"—" }}</dd>
+      <dt>Descriere</dt><dd>{{ expense.description|default:"—" }}</dd>
+      <dt>Categorie</dt><dd>{{ expense.category.name|default:"—" }}</dd>
+      <dt>Sursă</dt><dd>{{ expense.get_source_display }}{% if expense.recurring_id %}, din șablon recurent{% endif %}</dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Sume</h2>
+    <dl class="facts">
+      <dt>Valoare fără TVA</dt><dd>{{ expense.net|lei }}</dd>
+      <dt>TVA</dt><dd>{{ expense.vat|lei }}</dd>
+      <dt>Total</dt><dd>{{ expense.gross|lei }}</dd>
+      <dt>Plătită la</dt><dd>{{ expense.paid_date|date:"d.m.Y"|default:"Neplătită" }}</dd>
+    </dl>
+  </section>
+</div>
+<section class="card section-gap">
+  <h2>Documente justificative</h2>
+  {% if documents %}
+  <ul>{% for d in documents %}<li><a href="{% url 'tenant:document-download' tid d.pk %}">{{ d.original_name }}</a> <span class="small muted">{{ d.size|filesizeformat }}, {{ d.created_at|date:"d.m.Y" }}</span></li>{% endfor %}</ul>
+  {% else %}
+  <p class="muted">Niciun document atașat.</p>
+  {% endif %}
+  {% if can_edit and not expense.voided_at %}
+  <form method="post" enctype="multipart/form-data" class="form-card">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-secondary" type="submit">Atașează</button>
+  </form>
+  {% endif %}
+</section>
+{% endwith %}
+{% endblock %}

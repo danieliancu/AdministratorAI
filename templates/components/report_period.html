@@ -1,0 +1,6 @@
+{% load money %}<form method="get" class="toolbar">
+  <div class="field"><label for="de_la">De la</label><input id="de_la" type="date" name="de_la" value="{{ start|date:'Y-m-d' }}"></div>
+  <div class="field"><label for="pana_la">Până la</label><input id="pana_la" type="date" name="pana_la" value="{{ end|date:'Y-m-d' }}"></div>
+  <button class="btn btn-secondary" type="submit">Aplică</button>
+  <a class="btn btn-secondary" href="?{% query_without 'export' as rest %}{% if rest %}{{ rest }}&amp;{% endif %}export=csv">Descarcă CSV</a>
+</form>

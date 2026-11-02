@@ -1,27 +1,73 @@
-{% extends "base_tenant.html" %}
+{% extends "base_tenant.html" %}{% load money static %}
+{% block head %}{% if has_series %}<script defer src="{% static 'vendor/chart-4.4.9.umd.js' %}"></script><script defer src="{% static 'js/charts.js' %}"></script>{% endif %}{% endblock %}
 {% block content %}
-<h1>Prezentare generală</h1>
+{% with tid=request.tenant_access.tenant_id %}
+<div class="topbar compact">
+  <h1>Prezentare generală</h1>
+  {% if show_finance %}
+  <form method="get" class="inline-row">
+    <label for="luna" class="small">Luna</label>
+    <input id="luna" type="month" name="luna" value="{{ month_value }}" class="input-compact">
+    <button class="btn btn-secondary" type="submit">Afișează</button>
+  </form>
+  {% endif %}
+</div>
 {% if profile_incomplete %}
 <div class="alert alert-warning" role="status">
   Profilul fiscal nu este completat.
-  {% if can_edit_profile %}<a href="{% url 'tenant:fiscal-profile' request.tenant_access.tenant_id %}">Completează-l</a>{% endif %}
+  {% if can_edit_profile %}<a href="{% url 'tenant:fiscal-profile' tid %}">Completează-l</a>{% endif %}
 </div>
 {% endif %}
-<div class="grid">
-  <section class="card">
-    <h2>Vânzări și profit</h2>
-    <p class="muted">Nu există încă date. Modulul de vânzări este în construcție, așa că aici nu afișăm cifre.</p>
-    <span class="badge">în curând</span>
-  </section>
-  <section class="card">
-    <h2>Cheltuieli și stocuri</h2>
-    <p class="muted">Nu există încă date. Vei putea adăuga sau importa înregistrări după lansarea modulelor.</p>
-    <span class="badge">în curând</span>
-  </section>
-  <section class="card">
-    <h2>Obligații fiscale</h2>
-    <p class="muted">Calendarul fiscal nu este încă disponibil. Nu afișăm termene neverificate.</p>
-    <span class="badge">în curând</span>
-  </section>
+{% if show_finance %}
+<div class="alert alert-warning" role="status">Cifrele provin doar din ce ai introdus sau importat. Pot fi incomplete și nu sunt rezultate contabile.{% if not vat_confirmed %} Statutul de plătitor de TVA nu este confirmat, așa că verifică împreună cu contabilul cum se tratează TVA din cheltuieli.{% endif %}</div>
+<h2>{{ month_label }}</h2>
+<div class="stats">
+  <div class="stat"><span class="stat-label">Venituri înregistrate, fără TVA</span><span class="stat-value">{{ period.revenue_net|lei }}</span><span class="stat-note">Facturi și vânzări fără factură, la data documentului. Nu înseamnă bani primiți.</span></div>
+  <div class="stat"><span class="stat-label">Facturat, cu TVA</span><span class="stat-value">{{ period.invoiced_gross|lei }}</span><span class="stat-note">Facturi emise: {{ period.invoice_count }}</span></div>
+  <div class="stat"><span class="stat-label">Încasat</span><span class="stat-value">{{ period.received_total|lei }}</span><span class="stat-note">Bani primiți în lună, din încasările înregistrate</span></div>
+  <div class="stat"><span class="stat-label">Cheltuieli înregistrate, fără TVA</span><span class="stat-value">{{ period.expenses_net|lei }}</span><span class="stat-note">Documente: {{ period.expense_count }}; plătit în lună {{ period.expenses_paid|lei }}</span></div>
+  <div class="stat"><span class="stat-label">Facturi neîncasate</span><span class="stat-value">{{ outstanding|lei }}</span><span class="stat-note">La {{ as_of|date:"d.m.Y" }}, cu TVA</span></div>
+  <div class="stat"><span class="stat-label">Poziție de numerar estimată</span>{% if cash %}<span class="stat-value">{{ cash.amount|lei }}</span><span class="stat-note">Sold declarat la {{ cash.opening_date|date:"d.m.Y" }}, plus încasări, minus plăți înregistrate</span>{% else %}<span class="stat-value">Necunoscută</span><span class="stat-note">{% if can_edit_finance %}<a href="{% url 'tenant:opening-cash' tid %}">Declară soldul inițial</a>{% else %}Soldul inițial nu este declarat{% endif %}</span>{% endif %}</div>
+  <div class="stat"><span class="stat-label">Rezultat estimat înainte de impozite</span><span class="stat-value">{{ period.estimated_result|lei }}</span><span class="stat-note">Venituri minus cheltuieli, fără TVA. Nu este profit contabil.</span></div>
 </div>
+{% if alerts %}
+<section class="card section-gap">
+  <h2>De verificat</h2>
+  <ul class="plain-list">
+  {% for a in alerts %}
+    <li>
+      {% if a.kind == 'overdue' %}<a href="{% url 'tenant:report-receivables' tid %}">Facturi cu scadența depășită: {{ a.count }}</a>, rest {{ a.amount|lei }}
+      {% elif a.kind == 'low_stock' %}<a href="{% url 'tenant:product-list' tid %}?filtru=stoc-redus">Produse cu stoc redus: {{ a.count }}</a>
+      {% elif a.kind == 'recurring' %}<a href="{% url 'tenant:recurring-list' tid %}">Cheltuieli recurente negenerate luna aceasta: {{ a.count }}</a>
+      {% elif a.kind == 'imports' %}<a href="{% url 'tenant:import-list' tid %}">Importuri care așteaptă confirmarea: {{ a.count }}</a>
+      {% elif a.kind == 'opening_cash' %}Soldul inițial de numerar nu este declarat, deci nu putem estima poziția de numerar
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+<section class="card section-gap">
+  <h2>Ultimele 12 luni</h2>
+  {% if has_series %}
+  <div class="chart-box"><canvas data-chart="chart-data" role="img" aria-label="Venituri și cheltuieli înregistrate, pe luni. Valorile sunt în tabelul de mai jos."></canvas></div>
+  {{ chart|json_script:"chart-data" }}
+  <details class="section-gap">
+    <summary>Vezi cifrele ca tabel</summary>
+    <div class="table-wrap"><table>
+      <thead><tr><th scope="col">Luna</th><th scope="col" class="num">Venituri, fără TVA</th><th scope="col" class="num">Cheltuieli, fără TVA</th><th scope="col" class="num">Încasat</th></tr></thead>
+      <tbody>{% for r in series %}<tr><td>{{ r.label }}</td><td class="num">{{ r.revenue_net|lei }}</td><td class="num">{{ r.expenses_net|lei }}</td><td class="num">{{ r.received|lei }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </details>
+  {% else %}
+  <p class="muted">Nu există încă date pentru grafic. Adaugă <a href="{% url 'tenant:invoice-list' tid %}">facturi</a> și <a href="{% url 'tenant:expense-list' tid %}">cheltuieli</a> sau <a href="{% url 'tenant:import-list' tid %}">importă un fișier</a>.</p>
+  {% endif %}
+</section>
+{% endif %}
+<section class="card section-gap">
+  <h2>Obligații fiscale</h2>
+  <p class="muted">Calendarul fiscal nu este încă disponibil. Nu afișăm termene neverificate.</p>
+  <span class="badge">în curând</span>
+</section>
+{% endwith %}
 {% endblock %}

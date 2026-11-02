@@ -1,0 +1,21 @@
+{% if page.object_list %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Denumire</th><th scope="col">CUI</th><th scope="col">Email</th><th scope="col">Telefon</th><th scope="col">Stare</th></tr></thead>
+    <tbody>
+    {% for c in page %}
+      <tr>
+        <td>{% if can_edit %}<a href="{% url 'tenant:customer-edit' request.tenant_access.tenant_id c.pk %}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</td>
+        <td>{{ c.cui|default:"—" }}</td><td>{{ c.email|default:"—" }}</td><td>{{ c.phone|default:"—" }}</td>
+        <td>{% if c.is_active %}Activ{% else %}<span class="badge badge-muted">Inactiv</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% elif search %}
+<p class="muted">Niciun client nu corespunde căutării.</p>
+{% else %}
+<p class="muted">Nu ai adăugat încă niciun client. Adaugă primul, ca să poți emite facturi.</p>
+{% endif %}

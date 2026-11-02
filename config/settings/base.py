@@ -31,6 +31,11 @@ INSTALLED_APPS = [
     "apps.platform_admin",
     "apps.ai_gateway",
     "apps.legal_knowledge",
+    "apps.financial_imports",
+    "apps.sales",
+    "apps.expenses",
+    "apps.inventory",
+    "apps.reports",
 ]
 
 # DbScopeMiddleware must stay last: it answers from process_view, which skips
@@ -182,6 +187,7 @@ DATABASES["legal"] = {
     "PASSWORD": env("AAI_LEGAL_DB_PASSWORD", ""),
 }
 LEGAL_OBJECT_ROOT = env("LEGAL_OBJECT_ROOT", str(BASE_DIR / "var" / "legal-objects"))
+TENANT_FILE_ROOT = env("TENANT_FILE_ROOT", str(BASE_DIR / "var" / "tenant-files"))
 AAI_LEGAL_EMBEDDING_MODEL = env("AAI_LEGAL_EMBEDDING_MODEL", "fake:fake-embedding")
 AAI_LEGAL_USER_AGENT = "AdministratorAI-LegalSync/0.1"
 CELERY_BEAT_SCHEDULE["legal-sync-due-sources"] = {

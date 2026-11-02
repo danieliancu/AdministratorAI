@@ -1,0 +1,49 @@
+{% extends "base_tenant.html" %}{% load money %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+{% with tid=request.tenant_access.tenant_id %}
+<p class="small"><a href="{% url 'tenant:product-list' tid %}">Înapoi la stocuri</a></p>
+<div class="topbar compact">
+  <h1>{{ product.name }}</h1>
+  {% if can_edit %}<a class="btn btn-secondary" href="{% url 'tenant:product-edit' tid product.pk %}">Editează</a>{% endif %}
+</div>
+{% if is_low %}<div class="alert alert-warning" role="status">Stoc redus: {{ product.stock|quantity }} {{ product.unit }}, la pragul de {{ product.reorder_threshold|quantity }}.</div>{% endif %}
+<div class="grid">
+  <section class="card">
+    <dl class="facts">
+      <dt>Cod</dt><dd>{{ product.sku }}</dd>
+      <dt>Stoc calculat</dt><dd><strong>{{ product.stock|quantity }} {{ product.unit }}</strong></dd>
+      <dt>Prag de reaprovizionare</dt><dd>{{ product.reorder_threshold|quantity }}</dd>
+      <dt>Cost unitar declarat</dt><dd>{{ product.unit_cost|lei }}</dd>
+    </dl>
+  </section>
+  {% if can_edit %}
+  <section class="card">
+    <h2>Înregistrează o mișcare</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% include "components/form.html" %}
+      <button class="btn btn-primary" type="submit">Salvează mișcarea</button>
+    </form>
+  </section>
+  {% endif %}
+</div>
+<section class="card section-gap">
+  <h2>Istoric</h2>
+  <p class="muted small">Mișcările nu se pot modifica sau șterge. O greșeală se corectează cu o ajustare.</p>
+  {% if page.object_list %}
+  <div class="table-wrap"><table>
+    <thead><tr><th scope="col">Data</th><th scope="col">Tip</th><th scope="col" class="num">Cantitate</th><th scope="col">Referință</th><th scope="col">Sursă</th></tr></thead>
+    <tbody>
+    {% for m in page %}
+      <tr><td>{{ m.date|date:"d.m.Y" }}</td><td>{{ m.get_kind_display }}</td><td class="num">{{ m.quantity|quantity }}</td><td>{{ m.reference|default:"—" }}</td><td>{{ m.get_source_display }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  <p class="muted">Nicio mișcare înregistrată, deci stocul este zero.</p>
+  {% endif %}
+</section>
+{% endwith %}
+{% endblock %}

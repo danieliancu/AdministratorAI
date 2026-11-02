@@ -11,6 +11,20 @@ TENANT = {
     "ai_gateway_aiusagereservation",
     "ai_gateway_aiusageevent",
     "ai_gateway_aistoredresponse",
+    "financial_imports_importbatch",
+    "financial_imports_importrow",
+    "sales_customer",
+    "sales_salescategory",
+    "sales_invoice",
+    "sales_payment",
+    "sales_saletransaction",
+    "expenses_expensecategory",
+    "expenses_recurringexpense",
+    "expenses_expense",
+    "expenses_expensedocument",
+    "inventory_product",
+    "inventory_stockmovement",
+    "reports_openingcash",
 }
 TENANT_ROOT = {"tenants_tenant"}
 IDENTITY = {"accounts_user", "accounts_platformgrant"}

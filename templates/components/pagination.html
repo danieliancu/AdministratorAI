@@ -1,7 +1,7 @@
-{% if page.paginator.num_pages > 1 %}
+{% load money %}{% if page.paginator.num_pages > 1 %}{% query_without 'pagina' as rest %}
 <nav aria-label="Paginare" class="small" style="margin-top:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
-  {% if page.has_previous %}<a href="?pagina={{ page.previous_page_number }}{% if search %}&amp;q={{ search|urlencode }}{% endif %}">Înapoi</a>{% endif %}
+  {% if page.has_previous %}<a href="?pagina={{ page.previous_page_number }}{% if rest %}&amp;{{ rest }}{% endif %}">Înapoi</a>{% endif %}
   <span class="muted">Pagina {{ page.number }} din {{ page.paginator.num_pages }}</span>
-  {% if page.has_next %}<a href="?pagina={{ page.next_page_number }}{% if search %}&amp;q={{ search|urlencode }}{% endif %}">Înainte</a>{% endif %}
+  {% if page.has_next %}<a href="?pagina={{ page.next_page_number }}{% if rest %}&amp;{{ rest }}{% endif %}">Înainte</a>{% endif %}
 </nav>
 {% endif %}

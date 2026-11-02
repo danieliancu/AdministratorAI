@@ -18,15 +18,29 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    "django.contrib.contenttypes",
+    "django.contrib.auth",
+    "django.contrib.sessions",
+    "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.core",
+    "apps.accounts",
+    "apps.tenants",
 ]
 
+# DbScopeMiddleware must stay last: it answers from process_view, which skips
+# any process_view hook after it. A system check enforces this.
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.DbScopeMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -40,6 +54,8 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -64,8 +80,35 @@ DATABASES = {
     },
 }
 
-# Refuse to serve through a role that could bypass row-level security.
+# Refuse to serve through a role that could bypass row-level security, and
+# refuse queries that run outside a db_scope.
 AAI_DB_ROLE_GUARD = True
+
+AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.ScopedBackend"]
+LOGIN_URL = "public:login"
+LOGIN_REDIRECT_URL = "account:tenant-list"
+
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("CACHE_REDIS_URL", "redis://redis:6379/1"),
+    },
+}
 
 LANGUAGE_CODE = "ro"
 TIME_ZONE = "Europe/Bucharest"
@@ -77,6 +120,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+MAILERS = {
+    "default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"},
+}
+DEFAULT_FROM_EMAIL = "Administrator AI <no-reply@administrator-ai.local>"
 
 CELERY_BROKER_URL = env("REDIS_URL", "redis://redis:6379/0")
 CELERY_TASK_SERIALIZER = "json"
@@ -90,3 +138,6 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# Only config.settings.dev may enable the seed command with its weak known password.
+AAI_ALLOW_DEV_SEED = False

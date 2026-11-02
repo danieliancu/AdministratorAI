@@ -1,0 +1,11 @@
+{% extends "base_auth.html" %}
+{% block title %}Creează cont · Administrator AI{% endblock %}
+{% block card %}
+<h1>Creează cont</h1>
+<form method="post">
+  {% csrf_token %}
+  {% include "components/form.html" %}
+  <button class="btn btn-primary btn-block" type="submit">Creează contul</button>
+</form>
+<p class="small muted" style="margin-top:1rem">Ai deja cont? <a href="{% url 'public:login' %}">Autentifică-te</a></p>
+{% endblock %}

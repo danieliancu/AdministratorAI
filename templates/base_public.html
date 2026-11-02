@@ -1,0 +1,23 @@
+{% load static %}<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Administrator AI{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <header class="public-header">
+    {% include "components/brand.html" %}
+    <nav class="public-nav" aria-label="Navigare principală">
+      {% if user.is_authenticated %}
+        <a class="btn btn-primary" href="{% url 'account:tenant-list' %}">Deschide aplicația</a>
+      {% else %}
+        <a href="{% url 'public:login' %}">Autentificare</a>
+        <a class="btn btn-primary" href="{% url 'public:register' %}">Creează cont</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

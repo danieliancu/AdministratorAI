@@ -1,0 +1,7 @@
+{% extends "base_auth.html" %}
+{% block title %}Pagină negăsită · Administrator AI{% endblock %}
+{% block card %}
+<h1>Pagina nu a fost găsită</h1>
+<p>Pagina nu există sau nu ai acces la ea.</p>
+<a class="btn btn-primary btn-block" href="{% url 'public:landing' %}">Pagina principală</a>
+{% endblock %}

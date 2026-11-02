@@ -1,0 +1,14 @@
+{% extends "base_tenant.html" %}
+{% block content %}
+<h1>Profil fiscal</h1>
+<p class="muted">Datele sunt declarate de utilizator și nu sunt verificate la ANAF.</p>
+<section class="card" style="max-width:36rem">
+  <form method="post">
+    {% csrf_token %}
+    <fieldset style="border:0;margin:0;padding:0"{% if not can_edit %} disabled{% endif %}>
+      {% include "components/form.html" %}
+      {% if can_edit %}<button class="btn btn-primary" type="submit">Salvează</button>{% endif %}
+    </fieldset>
+  </form>
+</section>
+{% endblock %}

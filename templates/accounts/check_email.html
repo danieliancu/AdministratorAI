@@ -1,0 +1,7 @@
+{% extends "base_auth.html" %}
+{% block title %}Verifică emailul · Administrator AI{% endblock %}
+{% block card %}
+<h1>Verifică emailul</h1>
+<p>Dacă adresa este validă, ți-am trimis un mesaj cu pașii următori.</p>
+<a class="btn btn-secondary btn-block" href="{% url 'public:login' %}">Înapoi la autentificare</a>
+{% endblock %}

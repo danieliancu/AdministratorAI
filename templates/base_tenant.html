@@ -1,0 +1,50 @@
+{% load static %}<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ request.tenant_access.tenant_name }}{% endblock %} · Administrator AI</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    {% include "components/brand.html" %}
+    {% with tid=request.tenant_access.tenant_id active=request.resolver_match.url_name %}
+    <nav aria-label="Meniul firmei">
+      <ul class="side-nav">
+        <li><a href="{% url 'tenant:dashboard' tid %}"{% if active == 'dashboard' %} aria-current="page"{% endif %}>Prezentare generală</a></li>
+        <li><span class="soon">Vânzări <em>în curând</em></span></li>
+        <li><span class="soon">Cheltuieli <em>în curând</em></span></li>
+        <li><span class="soon">Stocuri <em>în curând</em></span></li>
+        <li><span class="soon">Calendar fiscal <em>în curând</em></span></li>
+        <li><span class="soon">Asistent AI <em>în curând</em></span></li>
+        <li><span class="soon">Rapoarte <em>în curând</em></span></li>
+        <li><span class="soon">Integrări <em>în curând</em></span></li>
+        <li><a href="{% url 'tenant:fiscal-profile' tid %}"{% if active == 'fiscal-profile' %} aria-current="page"{% endif %}>Profil fiscal</a></li>
+        <li><a href="{% url 'tenant:members' tid %}"{% if active == 'members' %} aria-current="page"{% endif %}>Membri</a></li>
+        <li><a href="{% url 'tenant:settings' tid %}"{% if active == 'settings' %} aria-current="page"{% endif %}>Setări</a></li>
+      </ul>
+    </nav>
+    {% endwith %}
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <strong>{{ request.tenant_access.tenant_name }}</strong>
+        <span class="badge">{{ request.tenant_access.role_label }}</span>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+        <a class="btn btn-secondary" href="{% url 'account:tenant-new' %}">Firmă nouă</a>
+        <form method="post" action="{% url 'account:logout' %}">
+          {% csrf_token %}
+          <button class="btn btn-secondary" type="submit">Ieșire</button>
+        </form>
+      </div>
+    </header>
+    {% include "components/messages.html" %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+</body>
+</html>

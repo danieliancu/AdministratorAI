@@ -1,0 +1,12 @@
+{% extends "base_auth.html" %}
+{% block title %}Firmă nouă · Administrator AI{% endblock %}
+{% block card %}
+<h1>Firmă nouă</h1>
+{% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+<form method="post">
+  {% csrf_token %}
+  {% include "components/form.html" %}
+  <button class="btn btn-primary btn-block" type="submit">Creează firma</button>
+</form>
+<p class="small" style="margin-top:1rem"><a href="{% url 'account:tenant-list' %}">Înapoi la firmele mele</a></p>
+{% endblock %}

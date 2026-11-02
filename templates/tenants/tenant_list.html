@@ -1,0 +1,19 @@
+{% extends "base_auth.html" %}
+{% block title %}Firmele mele · Administrator AI{% endblock %}
+{% block card %}
+<h1>Firmele mele</h1>
+{% if memberships %}
+  <div class="stack">
+  {% for m in memberships %}
+    <p><a href="{% url 'tenant:dashboard' m.tenant_id %}">{{ m.tenant.name }}</a> <span class="badge">{{ m.get_role_display }}</span></p>
+  {% endfor %}
+  </div>
+{% else %}
+  <p class="muted">Nu faci parte încă din nicio firmă. Creează una sau folosește linkul dintr-o invitație.</p>
+{% endif %}
+<a class="btn btn-primary btn-block" href="{% url 'account:tenant-new' %}">Adaugă o firmă</a>
+<form method="post" action="{% url 'account:logout' %}" style="margin-top:.75rem">
+  {% csrf_token %}
+  <button class="btn btn-secondary btn-block" type="submit">Ieșire</button>
+</form>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base_auth.html" %}
+{% block title %}Confirmare · Administrator AI{% endblock %}
+{% block card %}
+{% if valid %}
+<h1>Adresă confirmată</h1>
+<p>Te poți autentifica și îți poți crea firma.</p>
+{% else %}
+<h1>Link invalid</h1>
+<p>Linkul nu este valid sau a expirat.</p>
+{% endif %}
+<a class="btn btn-primary btn-block" href="{% url 'public:login' %}">Autentificare</a>
+{% endblock %}

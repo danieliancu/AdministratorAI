@@ -1,0 +1,41 @@
+{% extends "base_tenant.html" %}
+{% block content %}
+<h1>Membri</h1>
+<div class="stack">
+  <section class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Utilizator</th><th scope="col">Rol</th></tr></thead>
+        <tbody>
+        {% for m in memberships %}
+          <tr><td>{{ m.user.full_name|default:m.user.email }}<br><span class="small muted">{{ m.user.email }}</span></td><td>{{ m.get_role_display }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% if invitations %}
+  <section class="card">
+    <h2>Invitații în așteptare</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Email</th><th scope="col">Rol</th><th scope="col">Expiră</th></tr></thead>
+        <tbody>
+        {% for i in invitations %}
+          <tr><td>{{ i.email }}</td><td>{{ i.get_role_display }}</td><td>{{ i.expires_at|date:"d.m.Y" }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+  <section class="card" style="max-width:36rem">
+    <h2>Invită un membru</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% include "components/form.html" %}
+      <button class="btn btn-primary" type="submit">Trimite invitația</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

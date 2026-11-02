@@ -1,0 +1,27 @@
+{% extends "base_tenant.html" %}
+{% block content %}
+<h1>Prezentare generală</h1>
+{% if profile_incomplete %}
+<div class="alert alert-warning" role="status">
+  Profilul fiscal nu este completat.
+  {% if can_edit_profile %}<a href="{% url 'tenant:fiscal-profile' request.tenant_access.tenant_id %}">Completează-l</a>{% endif %}
+</div>
+{% endif %}
+<div class="grid">
+  <section class="card">
+    <h2>Vânzări și profit</h2>
+    <p class="muted">Nu există încă date. Modulul de vânzări este în construcție, așa că aici nu afișăm cifre.</p>
+    <span class="badge">în curând</span>
+  </section>
+  <section class="card">
+    <h2>Cheltuieli și stocuri</h2>
+    <p class="muted">Nu există încă date. Vei putea adăuga sau importa înregistrări după lansarea modulelor.</p>
+    <span class="badge">în curând</span>
+  </section>
+  <section class="card">
+    <h2>Obligații fiscale</h2>
+    <p class="muted">Calendarul fiscal nu este încă disponibil. Nu afișăm termene neverificate.</p>
+    <span class="badge">în curând</span>
+  </section>
+</div>
+{% endblock %}

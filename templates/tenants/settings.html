@@ -1,0 +1,11 @@
+{% extends "base_tenant.html" %}
+{% block content %}
+<h1>Setări</h1>
+<section class="card" style="max-width:36rem">
+  <form method="post">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">Salvează</button>
+  </form>
+</section>
+{% endblock %}

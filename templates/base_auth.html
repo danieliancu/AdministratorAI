@@ -1,0 +1,9 @@
+{% extends "base_public.html" %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="card auth-card">
+    {% include "components/messages.html" %}
+    {% block card %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

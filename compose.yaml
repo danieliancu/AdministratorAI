@@ -71,6 +71,8 @@ services:
     image: redis:8-alpine
     # noeviction: evicting broker keys would silently lose Celery tasks.
     command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -81,6 +83,7 @@ services:
   web:
     <<: *app
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    restart: unless-stopped
     environment: *runtime-env
     ports:
       - "127.0.0.1:8000:8000"
@@ -103,6 +106,7 @@ services:
   worker:
     <<: *app
     command: ["celery", "-A", "config", "worker", "--loglevel=info", "--concurrency=1"]
+    restart: unless-stopped
     environment: *runtime-env
     depends_on:
       migrate:
@@ -115,7 +119,30 @@ services:
     image: axllent/mailpit:v1.27
     ports:
       - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
     mem_limit: 64m
+
+  # Connects as the owner to create the test database, then conftest.py demotes
+  # every test connection to aai_app.
+  test:
+    <<: *app
+    profiles: ["test"]
+    command: ["pytest"]
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set in .env}
+      DB_HOST: db
+      DB_NAME: administrator_ai
+      DB_USER: aai_owner
+      DB_PASSWORD: ${AAI_OWNER_PASSWORD:?set in .env}
+      AAI_APP_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
+      REDIS_URL: redis://redis:6379/0
+      CACHE_REDIS_URL: redis://redis:6379/2
+    depends_on:
+      dbinit:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
 volumes:
   db_data:

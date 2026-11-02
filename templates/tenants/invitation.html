@@ -1,0 +1,11 @@
+{% extends "base_auth.html" %}
+{% block title %}Invitație · Administrator AI{% endblock %}
+{% block card %}
+<h1>Invitație</h1>
+{% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+<p>Acceptă invitația pentru a intra în firma care te-a invitat.</p>
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-primary btn-block" type="submit">Acceptă invitația</button>
+</form>
+{% endblock %}

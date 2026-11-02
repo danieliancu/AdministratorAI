@@ -1,0 +1,16 @@
+{% extends "base_auth.html" %}
+{% block title %}Autentificare · Administrator AI{% endblock %}
+{% block card %}
+<h1>Autentificare</h1>
+{% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% include "components/form.html" %}
+  <button class="btn btn-primary btn-block" type="submit">Intră în cont</button>
+</form>
+<p class="small muted" style="margin-top:1rem">
+  <a href="{% url 'public:password-reset' %}">Ai uitat parola?</a> ·
+  <a href="{% url 'public:register' %}">Creează cont</a>
+</p>
+{% endblock %}

@@ -1,7 +1,19 @@
 from .base import *  # noqa: F403
+from .base import env
 
 ALLOWED_HOSTS = ["testserver"]
 
-# The owner creates and migrates the test database. Increment 2 demotes the
-# connection to aai_app and turns this guard back on for the test run.
+# The owner creates and migrates the test database. tests/conftest.py then demotes
+# the connection to aai_app and turns this guard on for the test run.
 AAI_DB_ROLE_GUARD = False
+AAI_TEST_APP_USER = "aai_app"
+AAI_TEST_APP_PASSWORD = env("AAI_APP_PASSWORD")
+
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("CACHE_REDIS_URL", "redis://redis:6379/2"),
+    },
+}

@@ -29,7 +29,7 @@ A user can register, verify their email, create a firm or join one by invitation
 
 | Check | Result |
 |---|---|
-| `pytest` as `aai_app` | 125 passed (see the note on the last run below) |
+| `pytest` as `aai_app` | 125 passed |
 | Mutation: permissive tenant SELECT policy | Suite failed, 14 tests |
 | Mutation: identity mode sees every tenant | Suite failed, 4 tests |
 | Mutation: `db_scope` stops restoring context | Suite failed, 1 test |

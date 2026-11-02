@@ -84,7 +84,9 @@ services:
     <<: *app
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     restart: unless-stopped
-    environment: *runtime-env
+    environment:
+      <<: *runtime-env
+      AAI_PLATFORM_DB_PASSWORD: ${AAI_PLATFORM_PASSWORD:?set in .env}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -115,6 +117,18 @@ services:
         condition: service_healthy
     mem_limit: 384m
 
+  beat:
+    <<: *app
+    command: ["celery", "-A", "config", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule"]
+    restart: unless-stopped
+    environment: *runtime-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    mem_limit: 192m
+
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
@@ -136,6 +150,7 @@ services:
       DB_USER: aai_owner
       DB_PASSWORD: ${AAI_OWNER_PASSWORD:?set in .env}
       AAI_APP_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
+      AAI_PLATFORM_DB_PASSWORD: ${AAI_PLATFORM_PASSWORD:?set in .env}
       REDIS_URL: redis://redis:6379/0
       CACHE_REDIS_URL: redis://redis:6379/2
     depends_on:

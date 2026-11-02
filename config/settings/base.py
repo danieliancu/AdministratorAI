@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.tenants",
+    "apps.audit",
+    "apps.platform_admin",
 ]
 
 # DbScopeMiddleware must stay last: it answers from process_view, which skips
@@ -141,3 +143,18 @@ LOGGING = {
 
 # Only config.settings.dev may enable the seed command with its weak known password.
 AAI_ALLOW_DEV_SEED = False
+
+# Platform staff pages use this role only: masked views and audited functions, no tables.
+DATABASES["platform"] = {
+    **DATABASES["default"],
+    "USER": "aai_platform",
+    "PASSWORD": env("AAI_PLATFORM_DB_PASSWORD", ""),
+}
+DATABASE_ROUTERS = ["apps.core.db.router.PlatformRouter"]
+
+CELERY_BEAT_SCHEDULE = {
+    "clear-expired-sessions": {
+        "task": "accounts.clear_expired_sessions",
+        "schedule": 24 * 60 * 60,
+    },
+}

@@ -9,6 +9,9 @@ AAI_DB_ROLE_GUARD = False
 AAI_TEST_APP_USER = "aai_app"
 AAI_TEST_APP_PASSWORD = env("AAI_APP_PASSWORD")
 
+# A second connection to the same test database, as the restricted platform role.
+DATABASES["platform"]["TEST"] = {"MIRROR": "default"}  # noqa: F405
+
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 CACHES = {

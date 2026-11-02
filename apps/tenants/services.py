@@ -7,7 +7,8 @@ from django.db import IntegrityError, connection
 from django.utils import timezone
 
 from apps.accounts.models import normalize_login
-from apps.core.db.scope import db_scope
+from apps.audit.services import record_tenant_event
+from apps.core.db.scope import current_scope, db_scope
 
 from .models import (
     CompanyFiscalProfile,
@@ -69,6 +70,7 @@ def create_tenant(user, *, name, idempotency_key):
             TenantMembership.objects.create(tenant=tenant, user=user, role=Role.OWNER)
             TenantSettings.objects.create(tenant=tenant)
             CompanyFiscalProfile.objects.create(tenant=tenant)
+            record_tenant_event("tenant.created", actor_user_id=user.pk)
     return tenant
 
 
@@ -82,6 +84,11 @@ def invite_member(*, tenant_id, invited_by_membership_id, email, role):
         token_hash=hash_token(token),
         invited_by_id=invited_by_membership_id,
         expires_at=timezone.now() + timedelta(days=INVITATION_DAYS),
+    )
+    record_tenant_event(
+        "member.invited",
+        actor_user_id=current_scope().user_id,
+        metadata={"role": role},
     )
     return token
 
@@ -108,4 +115,7 @@ def accept_invitation(user, token):
                 )
         except IntegrityError as exc:
             raise InvitationInvalid from exc
+        record_tenant_event(
+            "member.joined", actor_user_id=user.pk, metadata={"role": invitation.role}
+        )
     return invitation.tenant_id

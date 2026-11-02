@@ -5,6 +5,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.audit.services import record_tenant_event
+
 from . import roles, services
 from .forms import FiscalProfileForm, InviteForm, TenantCreateForm, TenantNameForm
 from .models import CompanyFiscalProfile, Tenant, TenantInvitation, TenantMembership
@@ -80,6 +82,7 @@ def fiscal_profile(request, tenant_id):
         saved.provenance = CompanyFiscalProfile.Provenance.USER_DECLARED
         saved.updated_at = timezone.now()
         saved.save()
+        record_tenant_event("fiscal_profile.updated", actor_user_id=request.user.pk)
         messages.success(request, "Profilul fiscal a fost salvat.")
         return redirect("tenant:fiscal-profile", tenant_id=tenant_id)
     return render(
@@ -94,6 +97,7 @@ def tenant_settings(request, tenant_id):
     if request.method == "POST" and form.is_valid():
         # update_fields: the application role may write this column and not tenant status.
         form.save(commit=False).save(update_fields=["name"])
+        record_tenant_event("tenant.renamed", actor_user_id=request.user.pk)
         messages.success(request, "Setările au fost salvate.")
         return redirect("tenant:settings", tenant_id=tenant_id)
     return render(request, "tenants/settings.html", {"form": form})

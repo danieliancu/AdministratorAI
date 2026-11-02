@@ -1,0 +1,45 @@
+{% extends "base_platform.html" %}
+{% block title %}Firme{% endblock %}
+{% block content %}
+<div class="topbar" style="margin-bottom:1rem">
+  <h1 style="margin:0">Firme</h1>
+  {% if can_manage %}<a class="btn btn-primary" href="{% url 'platform:tenant-new' %}">Firmă nouă</a>{% endif %}
+</div>
+<form method="get" class="field" role="search" style="max-width:24rem">
+  <label for="q">Caută după nume</label>
+  <input id="q" type="search" name="q" value="{{ search }}">
+</form>
+<section class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Firmă</th><th scope="col">Stare</th><th scope="col">Creată de</th><th scope="col">Membri</th><th scope="col">Creată la</th>{% if can_manage %}<th scope="col">Acțiune</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for t in page.object_list %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td><span class="badge">{% if t.status == 'active' %}Activă{% else %}Suspendată{% endif %}</span></td>
+          <td>{{ t.creator_email }}</td>
+          <td>{{ t.member_count }}</td>
+          <td>{{ t.created_at|date:"d.m.Y" }}</td>
+          {% if can_manage %}
+          <td>
+            <form method="post" action="{% url 'platform:tenant-status' t.id %}" style="display:flex;gap:.4rem;flex-wrap:wrap">
+              {% csrf_token %}
+              <input type="hidden" name="status" value="{% if t.status == 'active' %}suspended{% else %}active{% endif %}">
+              <input name="reason" required maxlength="500" placeholder="Motiv" aria-label="Motiv pentru {{ t.name }}" style="padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
+              <button class="btn btn-secondary" type="submit">{% if t.status == 'active' %}Suspendă{% else %}Reactivează{% endif %}</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  <p class="muted">Nu există firme{% if search %} pentru această căutare{% endif %}.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -7,6 +7,7 @@ from django.db import IntegrityError
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.audit.services import record_security_event
 from apps.core.db.scope import db_scope
 
 from .models import User, normalize_login
@@ -92,3 +93,4 @@ def set_new_password(user, password):
     user.set_password(password)
     with db_scope(user_id=user.pk):
         user.save(update_fields=["password"])
+        record_security_event("password.reset", actor_user_id=user.pk)

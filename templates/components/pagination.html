@@ -1,0 +1,7 @@
+{% if page.paginator.num_pages > 1 %}
+<nav aria-label="Paginare" class="small" style="margin-top:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+  {% if page.has_previous %}<a href="?pagina={{ page.previous_page_number }}{% if search %}&amp;q={{ search|urlencode }}{% endif %}">Înapoi</a>{% endif %}
+  <span class="muted">Pagina {{ page.number }} din {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?pagina={{ page.next_page_number }}{% if search %}&amp;q={{ search|urlencode }}{% endif %}">Înainte</a>{% endif %}
+</nav>
+{% endif %}

@@ -46,6 +46,7 @@ UNSCOPED_ALLOWED = re.compile(
         | .*"django_content_type"
         | .*"auth_permission"
         | .*"django_migrations"
+        | \s*INSERT\s+INTO\s+"audit_securityevent"
         | .*pg_catalog\.pg_class\b
     )""",
     re.IGNORECASE | re.VERBOSE | re.DOTALL,

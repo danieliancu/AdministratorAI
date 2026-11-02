@@ -1,0 +1,12 @@
+{% extends "base_platform.html" %}
+{% block title %}Firmă nouă{% endblock %}
+{% block content %}
+<h1>Firmă nouă</h1>
+<section class="card" style="max-width:36rem">
+  <form method="post">
+    {% csrf_token %}
+    {% include "components/form.html" %}
+    <button class="btn btn-primary" type="submit">Creează firma</button>
+  </form>
+</section>
+{% endblock %}

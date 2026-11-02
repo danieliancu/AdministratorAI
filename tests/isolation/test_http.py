@@ -207,3 +207,38 @@ def test_seed_creates_admin_who_can_log_in_and_is_idempotent(client, settings):
     assert follow.status_code == 200
     assert "Firmă Demo SRL" in follow.content.decode()
     assert len(follow.redirect_chain) == 1
+
+
+def test_password_reset_flow(client):
+    alice = make_user()
+    mail.outbox.clear()
+    client.post(reverse("public:password-reset"), {"email": alice.email})
+    link = next(line for line in mail.outbox[0].body.splitlines() if "/resetare-parola/" in line)
+    new_password = "o-parola-noua-si-lunga"
+    response = client.post(
+        link, {"password": new_password, "password_again": new_password}
+    )
+    assert response.status_code == 302
+    other = "alta-parola-lunga-aici"
+    assert client.post(link, {"password": other, "password_again": other}).status_code == 400
+    assert client.post(
+        reverse("public:login"), {"identifier": alice.email, "password": new_password}
+    ).status_code == 302
+
+
+def test_password_reset_does_not_reveal_accounts(client):
+    alice = make_user()
+    mail.outbox.clear()
+    known = client.post(reverse("public:password-reset"), {"email": alice.email})
+    unknown = client.post(reverse("public:password-reset"), {"email": "nimeni@example.test"})
+    assert known.content == unknown.content
+    assert len(mail.outbox) == 1
+
+
+def test_open_redirect_is_refused_at_login(client):
+    alice = make_user()
+    response = client.post(
+        reverse("public:login"),
+        {"identifier": alice.email, "password": PASSWORD, "next": "https://rau.example/"},
+    )
+    assert response["Location"] == reverse("account:tenant-list")

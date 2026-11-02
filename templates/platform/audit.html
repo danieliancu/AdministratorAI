@@ -1,0 +1,28 @@
+{% extends "base_platform.html" %}
+{% block title %}Jurnal de audit{% endblock %}
+{% block content %}
+<h1>Jurnal de audit</h1>
+<section class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Când</th><th scope="col">Cine</th><th scope="col">Acțiune</th><th scope="col">Firmă</th><th scope="col">Motiv</th></tr></thead>
+      <tbody>
+      {% for e in page.object_list %}
+        <tr>
+          <td>{{ e.occurred_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ e.actor_email|default:"sistem" }}</td>
+          <td>{{ e.action }}</td>
+          <td>{{ e.target_tenant_name|default:"—" }}</td>
+          <td>{{ e.reason }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  <p class="muted">Nu există încă evenimente.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% load static %}<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Platformă{% endblock %} · Administrator AI</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    {% include "components/brand.html" %}
+    {% with active=request.resolver_match.url_name %}
+    <nav aria-label="Meniul platformei">
+      <ul class="side-nav">
+        <li><a href="{% url 'platform:overview' %}"{% if active == 'overview' %} aria-current="page"{% endif %}>Prezentare generală</a></li>
+        <li><a href="{% url 'platform:tenants' %}"{% if active == 'tenants' or active == 'tenant-new' %} aria-current="page"{% endif %}>Firme</a></li>
+        <li><a href="{% url 'platform:users' %}"{% if active == 'users' %} aria-current="page"{% endif %}>Utilizatori</a></li>
+        <li><span class="soon">Abonamente <em>în curând</em></span></li>
+        <li><span class="soon">Utilizare AI <em>în curând</em></span></li>
+        <li><span class="soon">Costuri AI <em>în curând</em></span></li>
+        <li><span class="soon">Surse legislative <em>în curând</em></span></li>
+        <li><span class="soon">Actualizări legislative <em>în curând</em></span></li>
+        <li><span class="soon">Reguli fiscale <em>în curând</em></span></li>
+        <li><span class="soon">Monitorizare <em>în curând</em></span></li>
+        <li><a href="{% url 'platform:audit' %}"{% if active == 'audit' %} aria-current="page"{% endif %}>Jurnal de audit</a></li>
+      </ul>
+    </nav>
+    {% endwith %}
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <strong>Administrare platformă</strong>
+        <span class="badge">{{ request.platform_access.role }}</span>
+      </div>
+      <form method="post" action="{% url 'account:logout' %}">
+        {% csrf_token %}
+        <button class="btn btn-secondary" type="submit">Ieșire</button>
+      </form>
+    </header>
+    {% include "components/messages.html" %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+</body>
+</html>

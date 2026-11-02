@@ -2,7 +2,7 @@ import psycopg
 import pytest
 from django.conf import settings
 from django.core.cache import cache
-from django.db import connection
+from django.db import connection, connections
 from django.test.utils import setup_databases, teardown_databases
 
 from apps.core.db import manifest
@@ -40,7 +40,7 @@ def django_db_setup(django_test_environment, django_db_blocker):
         settings.AAI_DB_ROLE_GUARD = True
     yield
     with django_db_blocker.unblock():
-        connection.close()
+        connections.close_all()
         settings.AAI_DB_ROLE_GUARD = False
         for settings_dict in (db, connection.settings_dict):
             settings_dict["USER"] = _owner_credentials["user"]
@@ -62,7 +62,7 @@ def committed_db(django_db_setup, django_db_blocker):
     """Real commits and autocommit, for what TestCase's wrapping transaction would hide."""
     with django_db_blocker.unblock():
         yield
-        connection.close()
+        connections.close_all()
     with psycopg.connect(**_owner_dsn()) as conn:
         tables = ", ".join(sorted(manifest.RLS_TABLES))
         conn.execute(f"TRUNCATE {tables} CASCADE")

@@ -29,7 +29,7 @@ def test_protected_tables_force_rls(owner_connection):
            WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')""",
     )
     state = {name: (enabled, forced) for name, enabled, forced in rows}
-    for table in manifest.RLS_TABLES:
+    for table in manifest.RLS_TABLES | manifest.AUDIT:
         assert state[table] == (True, True), table
 
 
@@ -42,8 +42,7 @@ def test_every_table_with_tenant_id_is_protected(owner_connection):
                WHERE table_schema = 'public' AND column_name = 'tenant_id'""",
         )
     }
-    assert tables <= manifest.RLS_TABLES
-    assert tables == manifest.TENANT
+    assert tables == manifest.TENANT | {"audit_tenantevent"}
 
 
 def test_policies_cover_each_command_separately(owner_connection):
@@ -67,12 +66,62 @@ def test_policies_cover_each_command_separately(owner_connection):
     assert commands["accounts_user"] == {"SELECT", "INSERT", "UPDATE"}
 
 
-def test_only_the_owner_policy_is_unconditionally_true(owner_connection):
+def test_unconditional_policies_never_apply_to_the_runtime_roles(owner_connection):
     rows = _rows(
         owner_connection,
-        "SELECT policyname FROM pg_policies WHERE schemaname = 'public' AND qual = 'true'",
+        """SELECT policyname, roles FROM pg_policies
+           WHERE schemaname = 'public' AND qual = 'true'""",
     )
-    assert {row[0] for row in rows} == {"tenant_sel_owner"}
+    assert rows
+    for name, roles in rows:
+        assert "aai_app" not in roles and "aai_platform" not in roles, name
+
+
+def test_platform_role_has_no_direct_table_access(owner_connection):
+    rows = _rows(
+        owner_connection,
+        """SELECT table_schema, table_name FROM information_schema.role_table_grants
+           WHERE grantee = 'aai_platform' AND table_schema <> 'platform'""",
+    )
+    assert rows == []
+
+
+def test_app_role_cannot_use_the_platform_schema(owner_connection):
+    rows = _rows(owner_connection, "SELECT has_schema_privilege('aai_app', 'platform', 'USAGE')")
+    assert rows == [(False,)]
+
+
+def test_platform_functions_are_not_public(owner_connection):
+    rows = _rows(
+        owner_connection,
+        """SELECT p.proname, p.prosecdef, p.proconfig IS NOT NULL,
+                  has_function_privilege('aai_app', p.oid, 'EXECUTE')
+           FROM pg_proc p WHERE p.pronamespace = 'platform'::regnamespace""",
+    )
+    assert rows
+    for name, _definer, has_config, app_can_execute in rows:
+        assert has_config, f"{name} must pin its search_path"
+        assert not app_can_execute, name
+
+
+def test_only_platform_functions_are_security_definer(owner_connection):
+    rows = _rows(
+        owner_connection,
+        """SELECT n.nspname, p.proname FROM pg_proc p
+           JOIN pg_namespace n ON n.oid = p.pronamespace
+           WHERE p.prosecdef AND n.nspname NOT LIKE 'pg\\_%'""",
+    )
+    assert {row[0] for row in rows} == {"platform"}
+
+
+def test_definer_cannot_read_password_hashes(owner_connection):
+    rows = _rows(
+        owner_connection,
+        """SELECT has_column_privilege('aai_platform_definer', 'accounts_user', 'password',
+                                       'SELECT'),
+                  has_column_privilege('aai_platform', 'accounts_user', 'password', 'SELECT')""",
+    )
+    assert rows == [(False, False)]
 
 
 def test_app_role_has_no_dangerous_privileges(owner_connection):

@@ -12,6 +12,10 @@ ALTER ROLE aai_app NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB NOREPLICATION
 ALTER ROLE aai_platform NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB NOREPLICATION PASSWORD :'platform_password';
 ALTER ROLE aai_platform_definer NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB NOREPLICATION;
 
+-- Lets migrations create objects owned by the definer. INHERIT FALSE: the owner must not
+-- pick up the definer's row-level policies just by being a member.
+GRANT aai_platform_definer TO aai_owner WITH INHERIT FALSE, SET TRUE;
+
 -- A role-level timezone lets Django skip its session-level SET TIME ZONE,
 -- which would not survive PgBouncer transaction pooling.
 ALTER ROLE aai_owner SET timezone = 'UTC';

@@ -2,6 +2,7 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import Http404
 
+from apps.platform_admin.access import load_platform_access
 from apps.tenants.access import load_tenant_access
 
 from .db.scope import db_scope
@@ -31,12 +32,27 @@ class DbScopeMiddleware:
         namespace = namespaces[0] if namespaces else None
         if namespace == "public":
             return None
-        if namespace not in ("account", "tenant"):
+        if namespace not in ("account", "tenant", "platform"):
             raise ImproperlyConfigured(f"Route has no scope namespace: {request.path}")
 
         user = request.user
         if not user.is_authenticated:
             return redirect_to_login(request.get_full_path())
+
+        if namespace == "platform":
+            capability = getattr(view_func, "required_platform_capability", None)
+            if capability is None:
+                raise ImproperlyConfigured(f"Platform view declares no capability: {request.path}")
+            with db_scope(user_id=user.pk):
+                access = load_platform_access(user.pk)
+            if access is None:
+                # Non-staff cannot even learn that the platform area exists.
+                raise Http404
+            if not access.can(capability):
+                raise PermissionDenied
+            request.platform_access = access
+            # No default-alias scope here: these views may only use the platform role.
+            return _run_view(view_func, request, view_args, view_kwargs)
 
         if namespace == "account":
             with db_scope(user_id=user.pk):

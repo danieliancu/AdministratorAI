@@ -1,0 +1,12 @@
+{% extends "base_platform.html" %}
+{% block content %}
+<h1>Prezentare generală</h1>
+<div class="grid">
+  <section class="card"><h2>Firme în total</h2><p style="font-size:1.8rem;font-weight:700;margin:0">{{ counts.tenants_total }}</p></section>
+  <section class="card"><h2>Firme active</h2><p style="font-size:1.8rem;font-weight:700;margin:0">{{ counts.tenants_active }}</p></section>
+  <section class="card"><h2>Firme suspendate</h2><p style="font-size:1.8rem;font-weight:700;margin:0">{{ counts.tenants_suspended }}</p></section>
+  <section class="card"><h2>Utilizatori activi</h2><p style="font-size:1.8rem;font-weight:700;margin:0">{{ counts.users_active }}</p></section>
+  <section class="card"><h2>Autentificări eșuate (24 h)</h2><p style="font-size:1.8rem;font-weight:700;margin:0">{{ counts.failed_logins_24h }}</p></section>
+</div>
+<p class="muted small" style="margin-top:1rem">Abonamentele, MRR-ul, costurile AI și starea surselor legislative apar aici după ce modulele respective sunt construite.</p>
+{% endblock %}

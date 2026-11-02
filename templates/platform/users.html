@@ -1,0 +1,25 @@
+{% extends "base_platform.html" %}
+{% block title %}Utilizatori{% endblock %}
+{% block content %}
+<h1>Utilizatori</h1>
+<p class="muted">Adresele sunt mascate implicit.</p>
+<section class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Utilizator</th><th scope="col">Activ</th><th scope="col">Email confirmat</th><th scope="col">Firme</th><th scope="col">Rol platformă</th></tr></thead>
+      <tbody>
+      {% for u in page.object_list %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td>{{ u.is_active|yesno:"Da,Nu" }}</td>
+          <td>{{ u.is_verified|yesno:"Da,Nu" }}</td>
+          <td>{{ u.tenant_count }}</td>
+          <td>{{ u.platform_role|default:"—" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" %}
+</section>
+{% endblock %}

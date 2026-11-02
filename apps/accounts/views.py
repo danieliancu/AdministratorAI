@@ -5,8 +5,10 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from apps.audit.services import record_security_event
 from apps.core.db.scope import db_scope
 from apps.core.throttle import Throttled, hit
+from apps.platform_admin.access import load_platform_access
 
 from . import services
 from .forms import LoginForm, PasswordResetRequestForm, RegistrationForm, SetPasswordForm
@@ -44,10 +46,13 @@ def login_view(request):
             # login() updates last_login, which only the user's own scope may write.
             with db_scope(user_id=user.pk):
                 login(request, user)
+                record_security_event("login.succeeded", request=request, actor_user_id=user.pk)
+                is_staff = load_platform_access(user.pk) is not None
             target = request.POST.get("next", "")
             if url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
                 return redirect(target)
-            return redirect("account:tenant-list")
+            return redirect("platform:overview" if is_staff else "account:tenant-list")
+        record_security_event("login.failed", request=request, identifier=identifier)
         error = "Datele de autentificare nu sunt corecte."
     return render(
         request,
@@ -58,6 +63,7 @@ def login_view(request):
 
 @require_POST
 def logout_view(request):
+    record_security_event("logout", request=request, actor_user_id=request.user.pk)
     logout(request)
     return redirect("public:landing")
 

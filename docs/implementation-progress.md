@@ -304,7 +304,7 @@ Not done: real embeddings for the legal corpus, reconciliation against OpenAI's 
 | `makemigrations --check` | No changes |
 | `pip-audit` on `requirements.lock` | No known vulnerabilities |
 | Real BNR rate | 1 USD = 4.7658 RON on 2 November 2026 |
-| Real AI spending while testing | 31 requests in total, under 0.10 lei |
+| Real AI spending while testing | 29 real requests, 0.08 lei in total |
 
 The checks in code did not withhold any answer in the real run, so against the real model they are proven only by simulated answers in the tests.
 

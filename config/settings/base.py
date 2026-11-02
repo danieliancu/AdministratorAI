@@ -107,6 +107,7 @@ AUTH_PASSWORD_VALIDATORS = [
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_FAILURE_VIEW = "apps.core.views.csrf_failure"
 
 CACHES = {
     "default": {

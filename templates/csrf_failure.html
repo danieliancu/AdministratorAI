@@ -1,0 +1,17 @@
+{% extends "base_auth.html" %}
+{% block title %}Pagină expirată{% endblock %}
+{% block card %}
+<h1>Pagina a expirat</h1>
+<p class="muted">Formularul a fost deschis înainte de ultima autentificare, de exemplu în alt tab, așa că acțiunea nu a fost executată.</p>
+{% if signed_in %}
+<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+  <a class="btn btn-secondary" href="{% url 'account:tenant-list' %}">Înapoi în aplicație</a>
+  <form method="post" action="{% url 'account:logout' %}">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit">Ieși din cont</button>
+  </form>
+</div>
+{% else %}
+<a class="btn btn-primary" href="{% url 'public:login' %}">Mergi la autentificare</a>
+{% endif %}
+{% endblock %}

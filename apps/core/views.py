@@ -53,3 +53,13 @@ def readyz(request):
     except Exception:
         return JsonResponse({"status": "unavailable"}, status=503)
     return JsonResponse({"status": "ok"})
+
+
+def csrf_failure(request, reason=""):
+    """A stale page, usually after signing in again in another tab. Offer a fresh form."""
+    return render(
+        request,
+        "csrf_failure.html",
+        {"signed_in": request.user.is_authenticated},
+        status=403,
+    )

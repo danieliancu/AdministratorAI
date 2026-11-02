@@ -151,6 +151,14 @@ def main():
         expect(staff.get_by_text("fake:fake-small").first).to_be_visible()
         staff.screenshot(path=SHOTS / "platform-ai-costs.png", full_page=True)
 
+        staff.get_by_role("link", name="Surse legislative").click()
+        expect(staff.get_by_role("heading", name="Portal Legislativ")).to_be_visible()
+        expect(staff.get_by_text("Sursele pornesc dezactivate")).to_be_visible()
+        staff.screenshot(path=SHOTS / "platform-legal-sources.png", full_page=True)
+        staff.get_by_role("link", name="Actualizări legislative").click()
+        expect(staff.get_by_role("heading", name="Actualizări legislative")).to_be_visible()
+        staff.screenshot(path=SHOTS / "platform-legal-changes.png", full_page=True)
+
         browser.close()
 
     if errors:

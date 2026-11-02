@@ -44,6 +44,7 @@ services:
       AAI_OWNER_PASSWORD: ${AAI_OWNER_PASSWORD:?set in .env}
       AAI_APP_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
       AAI_PLATFORM_PASSWORD: ${AAI_PLATFORM_PASSWORD:?set in .env}
+      AAI_LEGAL_PASSWORD: ${AAI_LEGAL_PASSWORD:?set in .env}
       AAI_OWNER_CREATEDB: "true"
     volumes:
       - ./ops/db:/ops/db:ro
@@ -114,6 +115,8 @@ services:
       <<: *runtime-env
       # Only the worker calls AI providers, so only the worker holds the key.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Only the worker writes the legal corpus. Web requests can only read it.
+      AAI_LEGAL_DB_PASSWORD: ${AAI_LEGAL_PASSWORD:?set in .env}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -155,6 +158,7 @@ services:
       DB_PASSWORD: ${AAI_OWNER_PASSWORD:?set in .env}
       AAI_APP_PASSWORD: ${AAI_APP_PASSWORD:?set in .env}
       AAI_PLATFORM_DB_PASSWORD: ${AAI_PLATFORM_PASSWORD:?set in .env}
+      AAI_LEGAL_DB_PASSWORD: ${AAI_LEGAL_PASSWORD:?set in .env}
       REDIS_URL: redis://redis:6379/0
       CACHE_REDIS_URL: redis://redis:6379/2
     depends_on:

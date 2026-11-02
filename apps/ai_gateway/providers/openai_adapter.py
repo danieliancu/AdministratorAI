@@ -8,6 +8,7 @@ import openai
 from django.conf import settings
 
 from .base import (
+    EmbedResult,
     ProviderAdapter,
     ProviderNotConfigured,
     ProviderOutcomeUnknown,
@@ -121,3 +122,24 @@ class OpenAIAdapter(ProviderAdapter):
             # Includes timeouts and dropped connections: the request may have been processed.
             raise ProviderOutcomeUnknown(type(exc).__name__) from exc
         return parse_response(response)
+
+    def embed(self, model_name, texts):
+        try:
+            response = self._client().embeddings.create(model=model_name, input=texts)
+        except openai.RateLimitError as exc:
+            raise ProviderRejected(str(exc.status_code)) from exc
+        except openai.InternalServerError as exc:
+            raise ProviderOutcomeUnknown(str(exc.status_code)) from exc
+        except openai.APIStatusError as exc:
+            raise ProviderRejected(str(exc.status_code)) from exc
+        except openai.APIError as exc:
+            raise ProviderOutcomeUnknown(type(exc).__name__) from exc
+        body = _as_dict(response)
+        ordered = sorted(body.get("data") or [], key=lambda item: item["index"])
+        usage = body.get("usage") or {}
+        tokens = usage.get("total_tokens") or usage.get("prompt_tokens")
+        return EmbedResult(
+            vectors=[item["embedding"] for item in ordered],
+            usage_known=tokens is not None,
+            input_tokens=tokens or 0,
+        )

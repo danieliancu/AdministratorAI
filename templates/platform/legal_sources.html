@@ -1,0 +1,48 @@
+{% extends "base_platform.html" %}
+{% block title %}Surse legislative{% endblock %}
+{% block content %}
+<h1>Surse legislative</h1>
+<div class="grid" style="margin-bottom:1rem">
+  <section class="card"><h2>Acte</h2><p style="font-size:1.6rem;font-weight:700;margin:0">{{ corpus.acts }}</p></section>
+  <section class="card"><h2>Versiuni</h2><p style="font-size:1.6rem;font-weight:700;margin:0">{{ corpus.versions }}</p></section>
+  <section class="card"><h2>Fragmente indexate</h2><p style="font-size:1.6rem;font-weight:700;margin:0">{{ corpus.chunks }}</p></section>
+  <section class="card">
+    <h2>Embeddings</h2>
+    <p style="font-size:1.6rem;font-weight:700;margin:0">{{ corpus.embeddings }}</p>
+    {% if corpus.synthetic_embeddings %}<p class="small" style="margin:0"><span class="badge">{{ corpus.synthetic_embeddings }} sintetice</span></p>{% endif %}
+  </section>
+</div>
+<div class="alert alert-warning" role="note">Sursele pornesc dezactivate. Condițiile de reutilizare comercială nu sunt verificate: activarea unei surse este o decizie care rămâne în jurnalul de audit.</div>
+<div class="stack">
+{% for s in sources %}
+  <section class="card">
+    <div class="topbar" style="margin-bottom:.5rem">
+      <h2 style="margin:0">{{ s.name }}</h2>
+      <div>
+        {% if s.connector == 'none' %}<span class="badge">neimplementat</span>
+        {% elif s.connector == 'manual' %}<span class="badge">import manual</span>
+        {% elif s.is_enabled %}<span class="badge">activă</span>
+        {% else %}<span class="badge">dezactivată</span>{% endif %}
+        {% if s.is_stale and s.is_enabled %}<span class="badge">date vechi</span>{% endif %}
+      </div>
+    </div>
+    <p class="small muted">{{ s.access_restrictions }}</p>
+    <p class="small" style="margin-bottom:.5rem">
+      Reutilizare: {% if s.licence_status == 'unknown' %}necunoscută{% else %}{{ s.licence_status }}{% endif %}
+      · Documente: {{ s.documents }}
+      · Ultima reușită: {{ s.last_success_at|date:"d.m.Y H:i"|default:"niciodată" }}
+      {% if s.circuit_open_until %}· Oprită temporar după erori repetate{% endif %}
+    </p>
+    {% if s.last_error %}<p class="alert alert-error small" role="status">{{ s.last_error }}</p>{% endif %}
+    {% if can_manage and s.connector == 'soap' or can_manage and s.connector == 'rss' %}
+    <form method="post" action="{% url 'platform:legal-source-toggle' s.key %}" style="display:flex;gap:.4rem;flex-wrap:wrap">
+      {% csrf_token %}
+      <input type="hidden" name="enabled" value="{% if s.is_enabled %}false{% else %}true{% endif %}">
+      <input name="reason" required maxlength="500" placeholder="Motiv" aria-label="Motiv pentru {{ s.name }}" style="padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
+      <button class="btn btn-secondary" type="submit">{% if s.is_enabled %}Dezactivează{% else %}Activează{% endif %}</button>
+    </form>
+    {% endif %}
+  </section>
+{% endfor %}
+</div>
+{% endblock %}

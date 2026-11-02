@@ -12,6 +12,7 @@ Administrator AI is a Django modular monolith. Pages are server-rendered, with H
 | `apps.audit` | Append-only event tables and the recording API |
 | `apps.platform_admin` | The `/platform/` area, on its own database role |
 | `apps.ai_gateway` | The only path to AI providers: budgets, reservations, versioned prices and prompts |
+| `apps.legal_knowledge` | Source connectors, versioned legal corpus, parsing, embeddings and date-aware retrieval |
 
 ## Request flow
 
@@ -34,6 +35,7 @@ A route in no namespace raises an error. Views render inside the scope, so lazy 
 | `dbinit` | superuser | Idempotent role setup, on every start |
 | `migrate` | `aai_owner` | One-shot migrations, the only runtime holder of owner credentials |
 | `web` | `aai_app`, `aai_platform` | Requests |
-| `worker`, `beat` | `aai_app` | Background tasks. Only `worker` holds the AI provider key |
+| `worker` | `aai_app`, `aai_legal` | Background tasks. The only holder of the AI provider key and the legal role |
+| `beat` | `aai_app` | Schedules tasks |
 | `redis` | | Celery broker and throttle counters |
 | `mailpit` | | Development email |

@@ -330,6 +330,46 @@ class AIStoredResponse(TenantOwnedModel):
         return f"Răspuns {self.pk}"
 
 
+class AIPlatformBudget(models.Model):
+    """The platform's own AI spending, such as indexing legislation. Tenants never pay it."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    period_start = models.DateTimeField(unique=True)
+    period_end = models.DateTimeField()
+    currency = models.CharField(max_length=3)
+    limit_amount = models.DecimalField(**MONEY)
+    spent = models.DecimalField(default=ZERO, **MONEY)
+    reserved = models.DecimalField(default=ZERO, **MONEY)
+
+    def __str__(self):
+        return f"Buget platformă {self.period_start:%Y-%m}"
+
+
+class AIPlatformUsage(models.Model):
+    class Status(models.TextChoices):
+        RESERVED = "reserved", "Rezervat"
+        COMMITTED = "committed", "Finalizat"
+        RELEASED = "released", "Eliberat"
+        UNKNOWN = "unknown", "Rezultat necunoscut"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    budget = models.ForeignKey(AIPlatformBudget, on_delete=models.PROTECT, related_name="usage")
+    model = models.ForeignKey(AIModel, on_delete=models.PROTECT, related_name="+")
+    pricing = models.ForeignKey(AIModelPricing, on_delete=models.PROTECT, related_name="+")
+    purpose = models.CharField(max_length=40)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.RESERVED)
+    input_tokens = models.PositiveIntegerField(default=0)
+    estimated_cost = models.DecimalField(**MONEY)
+    actual_cost = models.DecimalField(default=ZERO, **MONEY)
+    currency = models.CharField(max_length=3)
+    latency_ms = models.PositiveIntegerField(default=0)
+    is_synthetic = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    def __str__(self):
+        return f"{self.purpose} / {self.status}"
+
+
 class AIProviderReconciliation(models.Model):
     """Provider invoice against our calculation. Platform-only: the application has no access."""
 

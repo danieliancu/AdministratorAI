@@ -11,6 +11,7 @@ jobs:
       AAI_OWNER_PASSWORD: ci-only-not-a-secret
       AAI_APP_PASSWORD: ci-only-not-a-secret
       AAI_PLATFORM_PASSWORD: ci-only-not-a-secret
+      AAI_LEGAL_PASSWORD: ci-only-not-a-secret
     steps:
       - uses: actions/checkout@v4
         with:

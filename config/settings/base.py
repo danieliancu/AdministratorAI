@@ -23,12 +23,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "apps.core",
     "apps.accounts",
     "apps.tenants",
     "apps.audit",
     "apps.platform_admin",
     "apps.ai_gateway",
+    "apps.legal_knowledge",
 ]
 
 # DbScopeMiddleware must stay last: it answers from process_view, which skips
@@ -170,3 +172,18 @@ AAI_AI_MAX_RETRIES = 2
 AAI_AI_RESPONSE_RETENTION_DAYS = 7
 # The fake provider returns synthetic text, so production must never enable it.
 AAI_ALLOW_FAKE_AI = False
+
+# Legal corpus writes use their own role, held only by background services. A bug in
+# request handling therefore cannot alter legislation, because aai_app can only read it.
+DATABASES["legal"] = {
+    **DATABASES["default"],
+    "USER": "aai_legal",
+    "PASSWORD": env("AAI_LEGAL_DB_PASSWORD", ""),
+}
+LEGAL_OBJECT_ROOT = env("LEGAL_OBJECT_ROOT", str(BASE_DIR / "var" / "legal-objects"))
+AAI_LEGAL_EMBEDDING_MODEL = env("AAI_LEGAL_EMBEDDING_MODEL", "fake:fake-embedding")
+AAI_LEGAL_USER_AGENT = "AdministratorAI-LegalSync/0.1"
+CELERY_BEAT_SCHEDULE["legal-sync-due-sources"] = {
+    "task": "legal.sync_due_sources",
+    "schedule": 15 * 60,
+}

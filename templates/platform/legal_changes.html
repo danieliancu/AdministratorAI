@@ -1,0 +1,45 @@
+{% extends "base_platform.html" %}
+{% block title %}Actualizări legislative{% endblock %}
+{% block content %}
+<h1>Actualizări legislative</h1>
+<p class="muted">Aprobarea înseamnă că un specialist a verificat textul față de sursa oficială. Un text respins nu mai este folosit ca sursă.</p>
+<nav aria-label="Filtru după stare" style="display:flex;gap:1rem;margin-bottom:1rem">
+  <a href="?stare=pending"{% if status == 'pending' %} aria-current="page"{% endif %}>În așteptare</a>
+  <a href="?stare=approved"{% if status == 'approved' %} aria-current="page"{% endif %}>Aprobate</a>
+  <a href="?stare=rejected"{% if status == 'rejected' %} aria-current="page"{% endif %}>Respinse</a>
+</nav>
+<section class="card">
+  {% if page.object_list %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Când</th><th scope="col">Sursă</th><th scope="col">Schimbare</th><th scope="col">Document</th>{% if can_manage and status == 'pending' %}<th scope="col">Decizie</th>{% else %}<th scope="col">Notă</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for c in page.object_list %}
+        <tr>
+          <td>{{ c.created_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ c.source_id }}</td>
+          <td>{{ c.summary }}</td>
+          <td>{% if c.document_url %}<a href="{{ c.document_url }}" rel="noopener noreferrer">Oficial</a>{% endif %}</td>
+          {% if can_manage and status == 'pending' %}
+          <td>
+            <form method="post" action="{% url 'platform:legal-change-review' c.id %}" style="display:flex;gap:.4rem;flex-wrap:wrap">
+              {% csrf_token %}
+              <input name="note" required maxlength="500" placeholder="Notă" aria-label="Notă pentru schimbare" style="padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
+              <button class="btn btn-secondary" name="decision" value="approved" type="submit">Aprobă</button>
+              <button class="btn btn-secondary" name="decision" value="rejected" type="submit">Respinge</button>
+            </form>
+          </td>
+          {% else %}
+          <td>{{ c.review_note }}</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" %}
+  {% else %}
+  <p class="muted">Nu există schimbări cu această stare.</p>
+  {% endif %}
+</section>
+{% endblock %}

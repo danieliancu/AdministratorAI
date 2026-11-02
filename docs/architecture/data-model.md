@@ -24,6 +24,12 @@ Covers tables that exist today. `apps/core/db/manifest.py` is the authoritative 
 | `ai_gateway_aimodelpricing` | global catalog | Immutable, per model and effective date |
 | `ai_gateway_prompttemplateversion` | global catalog | Text immutable; only activation can change |
 | `ai_gateway_aiproviderreconciliation`, `aiexchangerate` | platform only | No application grant. Exchange rates are not used yet |
+| `ai_gateway_aiplatformbudget`, `aiplatformusage` | platform only | The platform's own AI spending, such as indexing. `aai_legal` updates status columns |
+| `legal_knowledge_legalsource` | global | Registry and health. `aai_legal` writes status columns, and only a superadmin can enable a source |
+| `legal_knowledge_legaldocument`, `legalact`, `legalprovision`, `legalprovisionversion`, `legalchunk`, `legalembedding`, `legalrelationship` | global | Immutable. Written by `aai_legal`, read by `aai_app` |
+| `legal_knowledge_legalactversion` | global | Immutable except the review columns, which only a superadmin's decision changes |
+| `legal_knowledge_legalapplicability` | global | Append-only history of when a version applied in law. See [versioning](../legal/versioning.md) |
+| `legal_knowledge_legalsyncjob`, `legalchangeevent` | platform only | Sync history and the review queue |
 | `django_session`, `django_content_type`, `auth_permission`, `django_migrations` | system | No tenant data. Explicit minimal grants |
 | `auth_group`, `auth_group_permissions` | system | Unused, no grants |
 

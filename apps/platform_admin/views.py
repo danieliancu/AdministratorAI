@@ -6,7 +6,7 @@ from django.db import DatabaseError
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from . import ai_services, services
+from . import ai_services, legal_services, services
 from .access import MANAGE, VIEW, VIEW_AI_COSTS, requires_platform
 from .forms import AIPolicyForm, ReconciliationForm, TenantCreateForm, TenantStatusForm
 
@@ -93,6 +93,62 @@ def audit_log(request):
     return render(request, "platform/audit.html", {"page": _page(request, services.audit_log())})
 
 
+@requires_platform(VIEW)
+def legal_sources(request):
+    return render(
+        request,
+        "platform/legal_sources.html",
+        {
+            "sources": legal_services.sources(),
+            "corpus": legal_services.corpus(),
+            "can_manage": request.platform_access.can(MANAGE),
+        },
+    )
+
+
+@require_POST
+@requires_platform(MANAGE)
+def legal_source_toggle(request, key):
+    reason = request.POST.get("reason", "").strip()
+    enabled = request.POST.get("enabled") == "true"
+    try:
+        legal_services.set_source_enabled(request.user.pk, key, enabled, reason)
+    except DatabaseError:
+        messages.error(request, "Starea nu a putut fi schimbată. Motivul este obligatoriu.")
+    else:
+        messages.success(request, "Starea sursei a fost schimbată.")
+    return redirect("platform:legal-sources")
+
+
+@requires_platform(VIEW)
+def legal_changes(request):
+    status = request.GET.get("stare", "pending")
+    status = status if status in ("pending", "approved", "rejected") else "pending"
+    return render(
+        request,
+        "platform/legal_changes.html",
+        {
+            "page": _page(request, legal_services.changes(status)),
+            "status": status,
+            "can_manage": request.platform_access.can(MANAGE),
+        },
+    )
+
+
+@require_POST
+@requires_platform(MANAGE)
+def legal_change_review(request, change_id):
+    decision = request.POST.get("decision", "")
+    note = request.POST.get("note", "").strip()
+    try:
+        legal_services.review_change(request.user.pk, change_id, decision, note)
+    except DatabaseError:
+        messages.error(request, "Decizia nu a putut fi salvată. Nota este obligatorie.")
+    else:
+        messages.success(request, "Decizia a fost salvată.")
+    return redirect("platform:legal-changes")
+
+
 @requires_platform(VIEW_AI_COSTS)
 def ai_usage(request):
     return render(
@@ -114,6 +170,7 @@ def ai_costs(request):
         "platform/ai_costs.html",
         {
             "breakdown": ai_services.cost_breakdown(),
+            "platform_budget": legal_services.platform_budget(),
             "reconciliations": ai_services.reconciliations(),
             "form": ReconciliationForm(),
             "can_manage": request.platform_access.can(MANAGE),

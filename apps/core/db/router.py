@@ -1,5 +1,5 @@
 class PlatformRouter:
-    """The platform alias is reached explicitly, and it never runs migrations."""
+    """The platform and legal aliases are reached explicitly, and never run migrations."""
 
     def allow_migrate(self, db, app_label, **hints):
-        return db != "platform"
+        return db not in ("platform", "legal")

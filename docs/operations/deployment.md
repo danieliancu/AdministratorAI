@@ -20,3 +20,7 @@
 ## Operational checks
 
 `tenants.record_context_probe` writes a `diagnostic.worker_context` event in a chosen tenant, which confirms a worker receives tenant context.
+
+## Legal corpus
+
+`worker` needs `AAI_LEGAL_DB_PASSWORD`, and `LEGAL_OBJECT_ROOT` must point to durable storage. In development that is `var/legal-objects`, inside the project. Originals in that folder are the provenance of the corpus, so production backups must include them.

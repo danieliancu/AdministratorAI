@@ -22,3 +22,5 @@ CACHES = {
 }
 
 AAI_ALLOW_FAKE_AI = True
+DATABASES["legal"]["TEST"] = {"MIRROR": "default"}  # noqa: F405
+LEGAL_OBJECT_ROOT = "/tmp/test-legal-objects"  # noqa: S108

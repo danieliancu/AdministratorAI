@@ -6,6 +6,7 @@ psql -v ON_ERROR_STOP=1 -d postgres \
   -v owner_password="$AAI_OWNER_PASSWORD" \
   -v app_password="$AAI_APP_PASSWORD" \
   -v platform_password="$AAI_PLATFORM_PASSWORD" \
+  -v legal_password="$AAI_LEGAL_PASSWORD" \
   -f /ops/db/roles.sql
 
 if [ "${AAI_OWNER_CREATEDB:-false}" = "true" ]; then

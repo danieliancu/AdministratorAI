@@ -50,6 +50,17 @@ class ProviderResult:
     is_synthetic: bool = False
 
 
+@dataclass(frozen=True)
+class EmbedResult:
+    vectors: list
+    usage_known: bool
+    input_tokens: int = 0
+    is_synthetic: bool = False
+
+
 class ProviderAdapter:
     def complete(self, request: ProviderRequest) -> ProviderResult:
+        raise NotImplementedError
+
+    def embed(self, model_name: str, texts: list) -> EmbedResult:
         raise NotImplementedError

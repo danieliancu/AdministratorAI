@@ -3,6 +3,12 @@
 {% block content %}
 <h1>Costuri AI</h1>
 <p class="muted">Costuri calculate din consumul raportat de provider și din prețurile versionate. Veniturile și marja de contribuție apar după construirea abonamentelor.</p>
+{% for b in platform_budget %}
+<section class="card" style="margin-bottom:1rem">
+  <h2>Bugetul platformei (indexarea legislației)</h2>
+  <p style="margin:0">{{ b.spent|floatformat:6 }} consumat și {{ b.reserved|floatformat:6 }} rezervat, din {{ b.limit_amount|floatformat:4 }} {{ b.currency }}</p>
+</section>
+{% endfor %}
 <section class="card">
   <h2>Pe operație și model</h2>
   {% if breakdown %}

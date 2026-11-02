@@ -131,3 +131,61 @@ See "Not built yet" in the [cost accounting](ai/cost-accounting.md) document. Al
 ### Next: Milestone 3, legal knowledge infrastructure
 
 Needs a legal review of reuse terms before commercial use. Portal Legislativ's terms are undocumented.
+
+## Milestone 3: legal knowledge infrastructure
+
+**State: infrastructure built and tested. The acceptance criterion is met for permitted material and representative questions, but the fiscal corpus is not usable yet.** The Fiscal Code cannot be obtained from the official service, and no consolidated text exists. See [source registry](legal/source-registry.md) and [versioning](legal/versioning.md).
+
+### Implemented
+
+- Source registry with health, freshness, schedules and a circuit breaker. All sources start disabled.
+- Portal Legislativ SOAP connector and ANAF RSS discovery, both run against the real services.
+- Manual import of official documents with declared provenance.
+- Content-addressed storage of originals, behind a replaceable adapter.
+- Parsing along articles and paragraphs, with Romanian full-text search that tolerates missing or old diacritics.
+- Bitemporal versioning, immutable history, incremental embedding, and hybrid retrieval with warnings.
+- Superadmin pages for sources and the review queue, with audited decisions.
+
+### Migrations
+
+`legal_knowledge` 0001–0003, `ai_gateway` 0004–0005, `platform_admin` 0004. Applied to the development database. `.env` needs the new `AAI_LEGAL_PASSWORD`.
+
+### Tests executed on 2 November 2026
+
+| Check | Result |
+|---|---|
+| `pytest` | 313 passed |
+| Mutation: date filter removed | 4 tests failed; reverted |
+| Mutation: `known_at` ignored | 1 test failed; reverted |
+| Real Portal Legislativ | Legea 296/2023 imported with 137 provisions; 2 rectifications kept as separate acts |
+| Real date check | The law is found for 2024, and nothing is found for 2020, before it applied |
+| Real Fiscal Code request | Rejected as incomplete, stored for provenance only |
+| Real ANAF feed | 5 press releases stored with extracted text, as guidance |
+| Browser, superadmin legal pages | Passed |
+| `pip-audit` on `requirements.lock` | No known vulnerabilities |
+
+Real data in the development database: 3 acts and 6 documents. No large corpus was downloaded, and every source remains disabled.
+
+### Defects found by running
+
+- **Invented period of application.** Two rectifications sharing type, number, year and issuer became versions of one act, with a false end date. Found only with real data. Acts from Portal Legislativ now include the source document id, with a regression test.
+- A locking query needed a privilege the legal role rightly lacks. The lock now covers only its own table.
+
+### Known limitations
+
+- **No consolidated text, so the corpus cannot answer what applies today.** This is the main gap.
+- ANAF documents are stored and listed but not searchable, because they have no act identity.
+- Amending laws quote other laws, so article citations can name the wrong act.
+- Semantic search ran only with the fake generator, so its quality is unknown.
+- Monitorul Oficial, Ministry of Finance, ONRC and EUR-Lex connectors are not built.
+- Change notifications to firms are not built.
+
+### Remaining dependencies
+
+- A decision on where consolidated texts come from, and a legal review of reuse terms.
+- A fiscal specialist for review and the 200-question regression set.
+- An OpenAI key for real embeddings.
+
+### Next: Milestone 4, tax rules engine
+
+Needs a fiscal specialist before any rule can become active.

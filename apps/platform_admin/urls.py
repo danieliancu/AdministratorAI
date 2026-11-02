@@ -9,6 +9,18 @@ urlpatterns = [
     path("firme/<uuid:tenant_id>/stare/", views.tenant_status, name="tenant-status"),
     path("utilizatori/", views.user_list, name="users"),
     path("audit/", views.audit_log, name="audit"),
+    path("legislatie/surse/", views.legal_sources, name="legal-sources"),
+    path(
+        "legislatie/surse/<str:key>/stare/",
+        views.legal_source_toggle,
+        name="legal-source-toggle",
+    ),
+    path("legislatie/actualizari/", views.legal_changes, name="legal-changes"),
+    path(
+        "legislatie/actualizari/<uuid:change_id>/decizie/",
+        views.legal_change_review,
+        name="legal-change-review",
+    ),
     path("ai/", views.ai_usage, name="ai-usage"),
     path("ai/costuri/", views.ai_costs, name="ai-costs"),
     path("ai/politica/<uuid:tenant_id>/", views.ai_policy, name="ai-policy"),

@@ -2,7 +2,7 @@
 
 Multi-tenant SaaS for Romanian small and medium businesses, built as a Django modular monolith with server-rendered templates, HTMX and Alpine.js on PostgreSQL.
 
-**Status:** Milestones 1 (SaaS foundation) and 2 (AI gateway and cost control) only. The gateway has not yet called a real provider. The financial modules, legal knowledge base, tax rules and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
+**Status:** Milestones 1 to 3 only: SaaS foundation, AI gateway, legal knowledge infrastructure. No real AI provider has been called, and the fiscal corpus has no consolidated text yet. The financial modules, tax rules, assistant and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
 
 ## Run it locally
 
@@ -57,7 +57,8 @@ python manage.py check
 
 - [Architecture overview](docs/architecture/overview.md), [decisions](docs/architecture/decisions.md), [data model](docs/architecture/data-model.md)
 - [Tenant isolation](docs/security/tenant-isolation.md), [AI cost accounting](docs/ai/cost-accounting.md)
+- [Legal sources](docs/legal/source-registry.md), [legal versioning](docs/legal/versioning.md)
 - [Deployment](docs/operations/deployment.md), [backup and restore](docs/operations/backup-restore.md)
 - [Implementation progress](docs/implementation-progress.md)
 
-The legal, tax and ANAF documents record findings and requirements for later milestones. They describe no working code.
+The tax rule and ANAF documents record requirements for later milestones and describe no working code.

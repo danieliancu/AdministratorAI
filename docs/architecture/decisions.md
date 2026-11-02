@@ -54,3 +54,19 @@ Joining browser preload lists is hard to undo, so it should be decided on the fi
 ## AI consumption is visible to the superadmin only
 
 A product decision: firms do not see their own AI consumption, costs, limits or alerts, and neither does the Support role. Platform actions on AI policy therefore write no tenant-visible audit event, unlike tenant suspension. `aai_app` must still read budget and usage tables to enforce limits, so this is enforced by routes and capabilities, not by the database. When the assistant is built in Milestone 6, its refusal messages must not reveal amounts or limits.
+
+## One app for the legal subsystem
+
+The specification suggests separate `legal_sources`, `legal_knowledge` and `legal_rag` apps. They share one data model and always change together, so they are one app with internal modules. Split it if that stops being true.
+
+## A separate role for the legal corpus
+
+`aai_legal` writes legislation and only `worker` holds it. `aai_app` can only read, so a bug in request handling cannot alter what the law says. `aai_legal` cannot read tenant data, enable a source or mark a text as reviewed.
+
+## The platform pays for indexing
+
+Legal text is shared, so embedding it is charged to `AIPlatformBudget`, not to a firm. It follows the same reservation rules as the gateway. Query embeddings for tenant questions will need a decision in Milestone 6.
+
+## Fewer legal tables than the specification names
+
+`LegalValidation` and `LegalReview` are combined into `LegalChangeEvent` plus the review columns on a version. `LegalAmendment` is a kind of `LegalRelationship`. `LegalImpactAssessment` waits for tax rules in Milestone 4.

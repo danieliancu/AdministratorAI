@@ -168,6 +168,32 @@ def test_missing_usage_is_reported_as_unknown():
     assert not result.usage_known
 
 
+def test_embeddings_are_parsed_in_order_and_not_retried():
+    calls = []
+
+    def handler(request):
+        calls.append(json.loads(request.content))
+        return httpx2.Response(
+            200,
+            json={
+                "object": "list",
+                "model": "m",
+                "data": [
+                    {"object": "embedding", "index": 1, "embedding": [0.2]},
+                    {"object": "embedding", "index": 0, "embedding": [0.1]},
+                ],
+                "usage": {"prompt_tokens": 9, "total_tokens": 9},
+            },
+        )
+
+    result = adapter_with(handler).embed("m", ["a", "b"])
+    assert result.vectors == [[0.1], [0.2]]
+    assert result.input_tokens == 9
+    assert result.usage_known
+    assert not result.is_synthetic
+    assert len(calls) == 1
+
+
 def test_no_key_means_not_configured(settings):
     settings.OPENAI_API_KEY = ""
     with pytest.raises(ProviderNotConfigured):

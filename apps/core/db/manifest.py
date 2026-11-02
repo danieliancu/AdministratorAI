@@ -15,16 +15,33 @@ TENANT = {
 TENANT_ROOT = {"tenants_tenant"}
 IDENTITY = {"accounts_user", "accounts_platformgrant"}
 AUDIT = {"audit_tenantevent", "audit_securityevent", "audit_platformevent"}
-# Shared catalog with no tenant data: readable by the application, written with owner credentials.
+# Shared content with no tenant data: readable by the application, written by other roles.
 GLOBAL_REF = {
     "ai_gateway_aiprovider",
     "ai_gateway_aimodel",
     "ai_gateway_aimodelpricing",
     "ai_gateway_aioperation",
     "ai_gateway_prompttemplateversion",
+    "legal_knowledge_legalsource",
+    "legal_knowledge_legaldocument",
+    "legal_knowledge_legalact",
+    "legal_knowledge_legalactversion",
+    "legal_knowledge_legalapplicability",
+    "legal_knowledge_legalprovision",
+    "legal_knowledge_legalprovisionversion",
+    "legal_knowledge_legalchunk",
+    "legal_knowledge_legalembedding",
+    "legal_knowledge_legalrelationship",
 }
 # The application has no grant here at all.
-PLATFORM_ONLY = {"ai_gateway_aiproviderreconciliation", "ai_gateway_aiexchangerate"}
+PLATFORM_ONLY = {
+    "ai_gateway_aiproviderreconciliation",
+    "ai_gateway_aiexchangerate",
+    "ai_gateway_aiplatformbudget",
+    "ai_gateway_aiplatformusage",
+    "legal_knowledge_legalsyncjob",
+    "legal_knowledge_legalchangeevent",
+}
 SYSTEM = {
     "auth_group",
     "auth_group_permissions",

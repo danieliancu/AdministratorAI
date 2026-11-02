@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.accounts.models import User
@@ -10,6 +11,7 @@ from apps.core.db.scope import db_scope
 from apps.tenants.models import TenantMembership
 
 MODEL_KEY = "fake:fake-small"
+EMBEDDING_MODEL_KEY = "fake:fake-embedding"
 OPERATION = "diagnostic.echo"
 
 
@@ -43,6 +45,27 @@ class Command(BaseCommand):
             },
         )
         AIOperation.objects.filter(pk=OPERATION).update(default_model=model)
+
+        embedding_model, _ = AIModel.objects.get_or_create(
+            key=EMBEDDING_MODEL_KEY,
+            defaults={"provider": provider, "provider_model_name": "fake-embedding"},
+        )
+        AIModelPricing.objects.get_or_create(
+            model=embedding_model,
+            effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+            defaults={
+                "currency": "USD",
+                "input_per_mtok": Decimal("0.02"),
+                "cached_read_per_mtok": Decimal("0"),
+                "cache_write_30m_per_mtok": Decimal("0"),
+                "cache_write_12h_per_mtok": Decimal("0"),
+                "output_per_mtok": Decimal("0"),
+                "source_url": "development-only: invented prices, not from any provider",
+            },
+        )
+        call_command(
+            "set_platform_ai_budget", limit=Decimal("1"), reason="development seed", verbosity=0
+        )
 
         with db_scope(lookup_email="admin"):
             admin = User.objects.filter(email="admin").first()

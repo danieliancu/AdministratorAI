@@ -22,8 +22,8 @@
         <li><a href="{% url 'platform:ai-usage' %}"{% if active == 'ai-usage' or active == 'ai-policy' %} aria-current="page"{% endif %}>Utilizare AI</a></li>
         <li><a href="{% url 'platform:ai-costs' %}"{% if active == 'ai-costs' %} aria-current="page"{% endif %}>Costuri AI</a></li>
         {% endif %}
-        <li><span class="soon">Surse legislative <em>în curând</em></span></li>
-        <li><span class="soon">Actualizări legislative <em>în curând</em></span></li>
+        <li><a href="{% url 'platform:legal-sources' %}"{% if active == 'legal-sources' %} aria-current="page"{% endif %}>Surse legislative</a></li>
+        <li><a href="{% url 'platform:legal-changes' %}"{% if active == 'legal-changes' %} aria-current="page"{% endif %}>Actualizări legislative</a></li>
         <li><span class="soon">Reguli fiscale <em>în curând</em></span></li>
         <li><span class="soon">Monitorizare <em>în curând</em></span></li>
         <li><a href="{% url 'platform:audit' %}"{% if active == 'audit' %} aria-current="page"{% endif %}>Jurnal de audit</a></li>

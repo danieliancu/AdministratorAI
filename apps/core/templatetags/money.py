@@ -18,6 +18,19 @@ def lei(value):
     return f"{_grouped(value, 2)} lei"
 
 
+@register.simple_tag
+def ron(value, currency, rate):
+    """Show a stored amount in lei, at the given rate. A missing rate is never guessed."""
+    if value is None or value == "":
+        return "—"
+    amount = Decimal(value)
+    if currency == "RON":
+        return lei(amount)
+    if currency == "USD" and rate is not None:
+        return lei(amount * Decimal(rate))
+    return f"{_grouped(amount, 2)} {currency}"
+
+
 @register.filter
 def quantity(value):
     if value is None or value == "":

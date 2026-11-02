@@ -307,8 +307,35 @@ class TestPages:
             },
         )
         assert response.status_code == 302
+        # Typed in lei, enforced in the provider's currency, at the test rate of 5 lei.
         with db_scope(tenant_id=tenant.pk, user_id=owner.pk):
-            assert AIBudgetPolicy.objects.get().monthly_limit == Decimal("3")
+            assert AIBudgetPolicy.objects.get().monthly_limit == Decimal("0.6")
+
+        owner_connection.execute("SELECT set_config('app.tenant_id', %s, true)", [str(tenant.pk)])
+        owner_connection.execute(
+            "UPDATE ai_gateway_aibudgetpolicy SET monthly_limit = 0.0123 WHERE tenant_id = %s",
+            [tenant.pk],
+        )
+        owner_connection.commit()
+        page = client.get(reverse("platform:ai-policy", args=[tenant.pk])).content.decode()
+        assert 'value="0.06"' in page or 'value="0,06"' in page
+        client.post(
+            reverse("platform:ai-policy", args=[tenant.pk]),
+            {
+                "monthly_limit": "0,06",
+                "overage_limit": "0",
+                "max_cost_per_request": "1",
+                "max_output_tokens": "100",
+                "requests_per_minute": "10",
+                "billing_anchor_day": "1",
+                "allowed_models": [MODEL],
+                "allowed_operations": [OP],
+                "reason": "fara schimbare",
+            },
+        )
+        # An untouched limit keeps its exact value: rounding for display must not move it.
+        with db_scope(tenant_id=tenant.pk, user_id=owner.pk):
+            assert AIBudgetPolicy.objects.get().monthly_limit == Decimal("0.0123")
 
     def test_support_cannot_open_the_policy_form(
         self, committed_db, ai_catalog, owner_connection, client

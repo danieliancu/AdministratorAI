@@ -2,7 +2,7 @@
 
 Multi-tenant SaaS for Romanian small and medium businesses, built as a Django modular monolith with server-rendered templates, HTMX and Alpine.js on PostgreSQL.
 
-**Status:** Milestones 1, 2, 3 and 5: SaaS foundation, AI gateway, legal knowledge infrastructure, financial application. No real AI provider has been called, and the fiscal corpus has no consolidated text yet. Tax rules, the fiscal calendar, the assistant and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
+**Status:** Milestones 1, 2, 3, 5 and 6: SaaS foundation, AI gateway, legal knowledge infrastructure, financial application, AI assistant. The fiscal corpus has no consolidated text yet, so legal answers are limited. Tax rules, the fiscal calendar and billing are not built. See [docs/implementation-progress.md](docs/implementation-progress.md). The application is not production ready.
 
 ## Run it locally
 

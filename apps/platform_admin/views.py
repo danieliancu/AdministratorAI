@@ -11,6 +11,15 @@ from .access import MANAGE, VIEW, VIEW_AI_COSTS, requires_platform
 from .forms import AIPolicyForm, ReconciliationForm, TenantCreateForm, TenantStatusForm
 
 PAGE_SIZE = 25
+CENT = Decimal("0.01")
+USD_PLACES = Decimal("0.00000001")
+MONEY_FIELDS = (
+    "monthly_limit",
+    "overage_limit",
+    "max_cost_per_request",
+    "user_daily_limit",
+    "user_monthly_limit",
+)
 POLICY_FIELDS = (
     "monthly_limit",
     "overage_authorised",
@@ -81,6 +90,11 @@ def tenant_status(request, tenant_id):
     else:
         messages.error(request, "Motivul este obligatoriu.")
     return redirect("platform:tenants")
+
+
+def _rate():
+    row = ai_services.usd_ron_rate()
+    return row["rate"] if row else None
 
 
 @requires_platform(VIEW)
@@ -156,6 +170,8 @@ def ai_usage(request):
         "platform/ai_usage.html",
         {
             "usage": ai_services.tenant_usage(),
+            "rate_row": ai_services.usd_ron_rate(),
+            "rate": _rate(),
             "tenants": services.tenants(),
             "uncertain": ai_services.uncertain_reservations(),
             "can_manage": request.platform_access.can(MANAGE),
@@ -170,6 +186,8 @@ def ai_costs(request):
         "platform/ai_costs.html",
         {
             "breakdown": ai_services.cost_breakdown(),
+            "rate_row": ai_services.usd_ron_rate(),
+            "rate": _rate(),
             "platform_budget": legal_services.platform_budget(),
             "reconciliations": ai_services.reconciliations(),
             "form": ReconciliationForm(),
@@ -181,15 +199,32 @@ def ai_costs(request):
 @requires_platform(VIEW_AI_COSTS)
 def ai_policy(request, tenant_id):
     current = ai_services.tenant_usage_one(tenant_id)
+    rate = _rate()
     initial = {name: current[name] for name in POLICY_FIELDS} if current else {}
+    if rate is None:
+        return render(request, "platform/ai_policy.html", {"current": current, "rate_row": None})
+    for name in MONEY_FIELDS:
+        if initial.get(name) is not None:
+            initial[name] = (initial[name] * rate).quantize(CENT)
     form = AIPolicyForm(request.POST or None, catalog=ai_services.catalog(), initial=initial)
     if request.method == "POST" and form.is_valid():
         data = dict(form.cleaned_data)
         reason = data.pop("reason")
+        for name in MONEY_FIELDS:
+            # Limits are enforced in the provider's currency. An untouched limit keeps its
+            # exact value, so saving the form cannot move it through rounding.
+            if name not in form.changed_data and current:
+                data[name] = current[name]
+            elif data[name] is not None:
+                data[name] = (data[name] / rate).quantize(USD_PLACES)
         ai_services.set_policy(request.user.pk, tenant_id, reason=reason, **data)
         messages.success(request, "Politica AI a fost salvată.")
         return redirect("platform:ai-usage")
-    return render(request, "platform/ai_policy.html", {"form": form, "current": current})
+    return render(
+        request,
+        "platform/ai_policy.html",
+        {"form": form, "current": current, "rate_row": ai_services.usd_ron_rate()},
+    )
 
 
 @require_POST

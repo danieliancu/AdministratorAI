@@ -1,0 +1,2 @@
+{% if rate_row %}<p class="muted small">Sume în lei, afișate cu două zecimale, la cursul BNR din {{ rate_row.effective_date|date:"d.m.Y" }}: 1 USD = {{ rate_row.rate|floatformat:4 }} lei. Bugetele se aplică și costurile se înregistrează exact, în USD, moneda furnizorului.</p>
+{% else %}<div class="alert alert-warning" role="status">Nu există un curs BNR salvat, așa că sumele apar în USD. Rulează comanda <code>fetch_bnr_rate</code>.</div>{% endif %}

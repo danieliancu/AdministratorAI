@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.expenses",
     "apps.inventory",
     "apps.reports",
+    "apps.assistant",
 ]
 
 # DbScopeMiddleware must stay last: it answers from process_view, which skips

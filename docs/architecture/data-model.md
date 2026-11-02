@@ -23,7 +23,7 @@ Covers tables that exist today. `apps/core/db/manifest.py` is the authoritative 
 | `ai_gateway_aiprovider`, `aimodel`, `aioperation` | global catalog | Application reads; owner credentials write |
 | `ai_gateway_aimodelpricing` | global catalog | Immutable, per model and effective date |
 | `ai_gateway_prompttemplateversion` | global catalog | Text immutable; only activation can change |
-| `ai_gateway_aiproviderreconciliation`, `aiexchangerate` | platform only | No application grant. Exchange rates are not used yet |
+| `ai_gateway_aiproviderreconciliation`, `aiexchangerate` | platform only | No application grant. The latest USD to RON rate is used for display on platform pages |
 | `ai_gateway_aiplatformbudget`, `aiplatformusage` | platform only | The platform's own AI spending, such as indexing. `aai_legal` updates status columns |
 | `legal_knowledge_legalsource` | global | Registry and health. `aai_legal` writes status columns, and only a superadmin can enable a source |
 | `legal_knowledge_legaldocument`, `legalact`, `legalprovision`, `legalprovisionversion`, `legalchunk`, `legalembedding`, `legalrelationship` | global | Immutable. Written by `aai_legal`, read by `aai_app` |
@@ -42,6 +42,7 @@ Covers tables that exist today. `apps/core/db/manifest.py` is the authoritative 
 | `financial_imports_importbatch` | tenant | One live batch per firm, kind and file checksum. No delete |
 | `financial_imports_importrow` | tenant | Original cells cannot be changed; only outcome columns can |
 | `reports_openingcash` | tenant | One per firm. Declared by the user, unverified |
+| `assistant_assistantmessage` | tenant | Row-level security also limits it to the person who asked |
 | `django_session`, `django_content_type`, `auth_permission`, `django_migrations` | system | No tenant data. Explicit minimal grants |
 | `auth_group`, `auth_group_permissions` | system | Unused, no grants |
 

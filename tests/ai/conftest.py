@@ -46,6 +46,11 @@ def ai_catalog(django_db_setup):
                        1, 0.1, 1.25, 2.5, 4, 'test', now())""",
             [MODEL],
         )
+        conn.execute(
+            """INSERT INTO ai_gateway_aiexchangerate
+               (id, base_currency, quote_currency, rate, effective_date, source_url)
+               VALUES (gen_random_uuid(), 'USD', 'RON', 5, '2026-01-01', 'test')"""
+        )
         operations = [
             (OP, MODEL, None, False, 0),
             (SCHEMA_OP, MODEL, json.dumps(SCHEMA), False, 0),

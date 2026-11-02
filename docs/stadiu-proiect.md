@@ -2,7 +2,7 @@
 
 Actualizat la 2 noiembrie 2026. Cod pe GitHub: `danieliancu/AdministratorAI`, ramura `master`.
 
-**Pe scurt:** M1, M2, M3 și M5 sunt construite și testate local. Rămân M4, M6, M7 și M8. Aplicația nu este gata de producție.
+**Pe scurt:** M1, M2, M3, M5 și M6 sunt construite și testate. Rămân M4, M7 și M8. Aplicația nu este gata de producție.
 
 ## Ce s-a făcut
 
@@ -12,6 +12,7 @@ Actualizat la 2 noiembrie 2026. Cod pe GitHub: `danieliancu/AdministratorAI`, ra
 | M2 AI Gateway și costuri | Gata, cu un prim apel real la OpenAI | Doar operația de diagnostic folosește un model real |
 | M3 Infrastructură legislativă | Gata, dar baza fiscală nu e utilizabilă | Nu există texte consolidate, iar Codul Fiscal nu se poate obține din serviciul oficial |
 | M5 Aplicația financiară | Gata, pe date de test | Niciun export contabil real încercat |
+| M6 Asistent AI | Gata, încercat cu OpenAI real pe date fictive | Fără integrarea cu regulile fiscale (M4). Răspunsurile legale sunt limitate de lipsa textelor consolidate |
 
 ### M1: fundația SaaS
 - Conturi, autentificare, verificare email, resetare parolă.
@@ -41,8 +42,15 @@ Limitele M5:
 - Se acceptă doar RON.
 - Un import nu se poate anula în bloc.
 
+### M6: asistent AI
+- Răspunde exclusiv din datele firmei și din legislația din aplicație.
+- Cifrele sunt calculate de aplicație. Dacă modelul scrie un număr care nu există în date, răspunsul lui nu se afișează.
+- Calculele de impozit sunt refuzate înainte de a ajunge la model.
+- Căutare în istoric, filtre, întrebări sugerate, iar istoricul îl vede doar cel care a întrebat.
+- Costurile AI apar la superadmin în lei, cu două zecimale, la cursul oficial BNR.
+
 ### Ultima verificare
-- 533 de teste trec, iar fluxul complet în browser trece.
+- 601 teste trec, iar fluxul complet în browser trece.
 - `ruff` este curat, iar `pip-audit` nu găsește vulnerabilități.
 - **CI pe GitHub:** trece pe `master`, cu lint, teste, migrări, `pip-audit` și `gitleaks`.
 
@@ -51,11 +59,10 @@ Limitele M5:
 | Etapă | Conținut | De ce depinde |
 |---|---|---|
 | M4 | Reguli fiscale și calendar fiscal | Regulile rămân inactive până le aprobă un specialist fiscal |
-| M6 | Asistent AI | Nimic extern pentru construcție; cele 200 de întrebări de control cer specialist fiscal |
 | M7 | Stripe, ANAF și notificări | Chei Stripe, certificat ANAF |
 | M8 | Pregătire pentru producție | Găzduire, validare juridică și fiscală |
 
-Cheia OpenAI este pusă și funcționează, deci M6 se poate începe oricând. M4 poate fi construit, dar regulile rămân inactive până la aprobarea specialistului fiscal.
+M4 poate fi construit, dar regulile rămân inactive până la aprobarea specialistului fiscal. Cele 200 de întrebări de control pentru asistent cer tot un specialist fiscal.
 
 ## Decizii deschise
 
@@ -66,7 +73,7 @@ Cheia OpenAI este pusă și funcționează, deci M6 se poate începe oricând. M
 ## Ce trebuie furnizat
 
 - Un specialist fiscal, pentru aprobarea regulilor și cele 200 de întrebări de control.
-- O verificare juridică a condițiilor de reutilizare a surselor legislative.
+- O verificare juridică a condițiilor de reutilizare a surselor legislative și a trimiterii datelor firmelor către OpenAI.
 - Exporturi reale din programele de contabilitate folosite de firme.
 - Chei Stripe de test, certificat și acces OAuth ANAF.
 - Găzduire și un furnizor de email pentru producție.

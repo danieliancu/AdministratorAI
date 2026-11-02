@@ -274,3 +274,61 @@ On 2 November 2026 one `diagnostic.echo` request went through the whole path, pa
 The demo firm's budget of $0.05 also holds $0.00027 from earlier fake-provider tests, because synthetic usage is charged to the same budget. This affects only the development database.
 
 Not done: real embeddings for the legal corpus, reconciliation against OpenAI's own usage figures, and any operation other than the diagnostic.
+
+## Milestone 6: AI assistant
+
+**State: built and run against the real provider on fictional data. Open: tax rule integration, because Milestone 4 does not exist, and specialist validation.** See [assistant](ai/assistant.md).
+
+### Implemented
+
+- Assistant page with search, filters, suggested questions by source, and answers in sections with icons.
+- Figures from the application only, with checks in code on numbers, citations and sources.
+- Tax calculations refused before any model call.
+- Legal retrieval by date, with amending acts cited without an article number.
+- Private history per person, with deletion.
+- Superadmin AI amounts in lei with two decimals, at the official BNR rate.
+
+### Migrations
+
+`assistant` 0001–0002, `ai_gateway` 0006–0007, `platform_admin` 0005. Applied to the development database.
+
+### Tests executed on 2 November 2026
+
+| Check | Result |
+|---|---|
+| `pytest` as `aai_app` | 601 passed |
+| Real provider, 11 questions on the final prompt | No invented figures; manipulation refused; off-topic question not answered |
+| Browser, real worker and real provider | Passed: suggestion, question, polling, answer, off-topic refusal, search, no sideways scroll at 400 px |
+| Full browser flow | Passed |
+| `ruff check` | Clean |
+| `makemigrations --check` | No changes |
+| `pip-audit` on `requirements.lock` | No known vulnerabilities |
+| Real BNR rate | 1 USD = 4.7658 RON on 2 November 2026 |
+| Real AI spending while testing | 31 requests in total, under 0.10 lei |
+
+The checks in code did not withhold any answer in the real run, so against the real model they are proven only by simulated answers in the tests.
+
+### Defects found by running
+
+- **The real model answered "Paris" to an off-topic question** from general knowledge. The prompt now forbids it, and an answer with no source is not shown, whatever the model does.
+- **The question box did not return after an answer** without a manual reload. Found only in the browser.
+- BNR's documented address redirects to its home page, with a success status. The parser refuses anything that holds no rate.
+
+### Known limitations
+
+See [assistant](ai/assistant.md). Mainly: legal answers are limited by the corpus; retrieval is by keyword; each question stands alone; no regression set exists; the exchange rate is updated by hand.
+
+### Security considerations
+
+- Company figures, and names when relevant, go to OpenAI. A legal review is needed before real use.
+- The repository is public, including the development accounts and their password, which work only in development.
+
+### Remaining dependencies
+
+- A fiscal specialist, for the 200-question set and for Milestone 4.
+- Consolidated legal texts.
+- Legal review of data sent to the provider.
+
+### Next: Milestone 4, tax rules engine
+
+Rules stay inactive until a specialist approves them.

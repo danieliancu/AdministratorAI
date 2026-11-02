@@ -83,13 +83,29 @@ The command refuses a model with no price in force. Running `seed_ai_dev` afterw
 
 To test the path end to end, `docker compose exec web python manage.py run_ai_diagnostic <login>` queues one request for that member's firm. It is charged to the firm's budget, and a real provider will bill for it.
 
+## Display in lei
+
+Superadmin pages show every AI amount in lei, with two decimals. Costs, budgets and limits stay stored and enforced exactly, in USD, the provider's currency. Limits are typed in lei and converted when saved; a limit left untouched keeps its exact value.
+
+The rate is the official one from the National Bank of Romania:
+
+```powershell
+docker compose run --rm migrate python manage.py fetch_bnr_rate
+```
+
+BNR's address `www.bnr.ro/nbrfxrates.xml` now redirects to its home page, so the command reads `curs.bnr.ro/nbrfxrates.xml`. Without a stored rate, pages show USD and the policy form is hidden: a rate is never assumed.
+
+All amounts are converted at the latest stored rate, including past months, and the page states its date. Two decimals in lei hide small amounts: a single request usually shows as 0,00 lei. The exact USD figures remain in `AIUsageEvent`.
+
 ## Development
 
 `docker compose run --rm migrate python manage.py seed_ai_dev` installs a fake provider with invented prices and enables it for the demo firm, and it refuses to run unless the fake provider is allowed. Fake answers are marked `is_synthetic` and labelled on every page. Production settings do not allow the fake provider.
 
 ## Not built yet
 
-- GBP and RON reporting. The `AIExchangeRate` table exists but has no way to enter rates and no pages use it, so costs appear in USD only.
+- GBP reporting.
+- Scheduled rate updates. `fetch_bnr_rate` is run by hand.
+- Conversion at each event's own date. See below.
 - Contribution margin, which needs revenue from Milestone 7.
 - Email for budget alerts. They appear only on the superadmin's AI usage page.
 - Semantic caching. Only exact-match caching exists.

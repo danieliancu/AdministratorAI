@@ -17,6 +17,11 @@ def tenant_usage_one(tenant_id):
     return rows[0] if rows else None
 
 
+def usd_ron_rate():
+    rows = _rows("SELECT * FROM platform.ai_usd_ron_rate")
+    return rows[0] if rows else None
+
+
 def cost_breakdown():
     return _rows(
         "SELECT * FROM platform.ai_cost_breakdown ORDER BY month DESC, cost DESC LIMIT 500"

@@ -25,6 +25,7 @@ TENANT = {
     "inventory_product",
     "inventory_stockmovement",
     "reports_openingcash",
+    "assistant_assistantmessage",
 }
 TENANT_ROOT = {"tenants_tenant"}
 IDENTITY = {"accounts_user", "accounts_platformgrant"}

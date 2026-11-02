@@ -22,7 +22,7 @@
         <li><a href="{% url 'tenant:report-summary' tid %}"{% if active == 'report-summary' %} aria-current="page"{% endif %}>Rapoarte</a></li>
         <li><a href="{% url 'tenant:import-list' tid %}"{% if active == 'import-list' %} aria-current="page"{% endif %}>Importuri</a></li>
         <li><span class="soon">Calendar fiscal <em>în curând</em></span></li>
-        <li><span class="soon">Asistent AI <em>în curând</em></span></li>
+        {% if request.tenant_access.can_use_ai %}<li><a href="{% url 'tenant:assistant' tid %}"{% if active == 'assistant' %} aria-current="page"{% endif %}>Asistent AI</a></li>{% endif %}
         <li><span class="soon">Integrări <em>în curând</em></span></li>
         <li><a href="{% url 'tenant:fiscal-profile' tid %}"{% if active == 'fiscal-profile' %} aria-current="page"{% endif %}>Profil fiscal</a></li>
         <li><a href="{% url 'tenant:members' tid %}"{% if active == 'members' %} aria-current="page"{% endif %}>Membri</a></li>

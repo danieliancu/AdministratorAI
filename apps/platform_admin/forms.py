@@ -19,20 +19,20 @@ class TenantStatusForm(forms.Form):
 
 
 class AIPolicyForm(forms.Form):
-    monthly_limit = forms.DecimalField(label="Buget lunar (USD)", min_value=0, decimal_places=8)
+    monthly_limit = forms.DecimalField(label="Buget lunar (lei)", min_value=0, decimal_places=2)
     overage_authorised = forms.BooleanField(label="Depășire plătită autorizată", required=False)
     overage_limit = forms.DecimalField(
-        label="Limită depășire (USD)", min_value=0, decimal_places=8, initial=0
+        label="Limită depășire (lei)", min_value=0, decimal_places=2, initial=0
     )
     max_cost_per_request = forms.DecimalField(
-        label="Cost maxim pe cerere (USD)", min_value=0, decimal_places=8
+        label="Cost maxim pe cerere (lei)", min_value=0, decimal_places=2
     )
     max_output_tokens = forms.IntegerField(label="Tokeni de ieșire maximi", min_value=1)
     user_daily_limit = forms.DecimalField(
-        label="Limită zilnică per utilizator (USD)", min_value=0, decimal_places=8, required=False
+        label="Limită zilnică per utilizator (lei)", min_value=0, decimal_places=2, required=False
     )
     user_monthly_limit = forms.DecimalField(
-        label="Limită lunară per utilizator (USD)", min_value=0, decimal_places=8, required=False
+        label="Limită lunară per utilizator (lei)", min_value=0, decimal_places=2, required=False
     )
     requests_per_minute = forms.IntegerField(label="Cereri pe minut", min_value=1, initial=30)
     billing_anchor_day = forms.IntegerField(
@@ -60,6 +60,8 @@ class ReconciliationForm(forms.Form):
     provider = forms.CharField(label="Provider", max_length=40)
     start = forms.DateTimeField(label="De la (AAAA-LL-ZZ HH:MM)")
     end = forms.DateTimeField(label="Până la (AAAA-LL-ZZ HH:MM)")
-    reported = forms.DecimalField(label="Cost raportat de provider", min_value=0, decimal_places=8)
+    reported = forms.DecimalField(
+        label="Cost raportat de provider, în moneda facturii", min_value=0, decimal_places=8
+    )
     currency = forms.CharField(label="Monedă", max_length=3, initial="USD")
     note = forms.CharField(label="Notă, de exemplu numărul facturii", max_length=500)

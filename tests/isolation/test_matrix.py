@@ -11,6 +11,7 @@ from django.db.models import Count
 from django.utils import timezone
 
 from apps.ai_gateway.models import AIStoredResponse
+from apps.assistant.models import AssistantMessage
 from apps.audit.models import TenantEvent
 from apps.core.db.scope import db_scope
 from apps.expenses.models import (
@@ -160,6 +161,10 @@ def _make_import_row(tenant, user):
     )
 
 
+def _make_assistant_message(tenant, user):
+    return AssistantMessage.objects.create(tenant=tenant, user=user, question="Secret")
+
+
 def _make_opening_cash(tenant, user):
     return OpeningCash.objects.create(tenant=tenant, amount=1, as_of="2026-03-01")
 
@@ -199,6 +204,7 @@ MODELS = [
     pytest.param(ImportBatch, _make_batch, id="import-batch"),
     pytest.param(ImportRow, _make_import_row, id="import-row"),
     pytest.param(OpeningCash, _make_opening_cash, id="opening-cash"),
+    pytest.param(AssistantMessage, _make_assistant_message, id="assistant-message"),
 ]
 
 

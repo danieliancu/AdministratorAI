@@ -1,0 +1,12 @@
+{% regroup page by day_label as days %}
+{% for day in days %}
+<h3 class="day-label">{{ day.grouper }}</h3>
+{% for message in day.list %}{% include "assistant/_message.html" %}{% endfor %}
+{% empty %}
+{% if search or kind %}
+<p class="card muted">Nicio întrebare nu corespunde căutării.</p>
+{% elif enabled %}
+<p class="card muted">Nu ai pus încă nicio întrebare. Alege una dintre sugestii sau scrie-o pe a ta.</p>
+{% endif %}
+{% endfor %}
+{% include "components/pagination.html" %}

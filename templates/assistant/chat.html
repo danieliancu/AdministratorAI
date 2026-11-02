@@ -1,0 +1,71 @@
+{% extends "base_tenant.html" %}{% load static %}
+{% block title %}Asistent AI{% endblock %}
+{% block head %}<script defer src="{% static 'js/assistant.js' %}"></script>{% endblock %}
+{% block content %}
+{% include "components/icons.html" %}
+{% url 'tenant:assistant' request.tenant_access.tenant_id as chat_url %}
+<div class="topbar compact">
+  <h1 class="with-icon"><svg class="icon icon-lg"><use href="#i-spark"/></svg>Asistent AI</h1>
+</div>
+<p class="muted">Răspunde exclusiv din datele firmei tale și din legislația disponibilă în aplicație. Cifrele sunt calculate de aplicație, nu de AI.</p>
+{% if not enabled %}
+<div class="alert alert-warning" role="status">Asistentul nu este activat pentru această firmă.</div>
+{% else %}
+<section class="card composer">
+  {% if waiting %}
+  <p class="muted with-icon" role="status"><span class="spinner" aria-hidden="true"></span>Așteaptă răspunsul înainte de a pune o altă întrebare.</p>
+  {% else %}
+  <form method="post" id="ask-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="field composer-field">
+      <label for="{{ form.question.id_for_label }}">Întrebarea ta</label>
+      {{ form.question }}
+      {{ form.question.errors }}
+    </div>
+    <div class="composer-actions">
+      <span class="small muted">Enter trimite, Shift+Enter trece pe rând nou. Nu scrie parole sau date personale.</span>
+      <button class="btn btn-primary" type="submit"><svg class="icon"><use href="#i-send"/></svg>Întreabă</button>
+    </div>
+  </form>
+  <div class="suggestions">
+    {% for group in suggestions %}
+    <div class="suggestion-group">
+      <h2 class="eyebrow with-icon"><svg class="icon"><use href="#{{ group.icon }}"/></svg>{{ group.title }}</h2>
+      <ul class="chips">
+        {% for item in group.items %}
+        <li><button type="button" class="chip" data-suggest="{{ item.text }}"><svg class="icon"><use href="#{{ item.icon }}"/></svg>{{ item.text }}</button></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+<section class="section-gap" aria-label="Istoric">
+  <div class="history-head">
+    <h2>Istoricul meu</h2>
+    {% if has_history %}<form method="post" action="{% url 'tenant:assistant-clear' request.tenant_access.tenant_id %}">{% csrf_token %}<button class="btn btn-secondary" type="submit"><svg class="icon"><use href="#i-trash"/></svg>Șterge istoricul</button></form>{% endif %}
+  </div>
+  {% if has_history %}
+  <form method="get" class="toolbar" role="search">
+    <div class="field search-field">
+      <label for="q">Caută în întrebări și răspunsuri</label>
+      <span class="input-with-icon"><svg class="icon"><use href="#i-search"/></svg>
+        <input id="q" type="search" name="q" value="{{ search }}" hx-get="{{ chat_url }}" hx-trigger="input changed delay:300ms, search" hx-target="#history" hx-include="closest form" hx-push-url="true">
+      </span>
+    </div>
+    <div class="field">
+      <label for="tip">Tip</label>
+      <select id="tip" name="tip" hx-get="{{ chat_url }}" hx-target="#history" hx-include="closest form" hx-push-url="true">
+        <option value="">Toate</option>
+        <option value="firma"{% if kind == 'firma' %} selected{% endif %}>Datele firmei</option>
+        <option value="legislatie"{% if kind == 'legislatie' %} selected{% endif %}>Legislație</option>
+      </select>
+    </div>
+  </form>
+  {% endif %}
+  <div id="history" aria-live="polite">{% include "assistant/_history.html" %}</div>
+</section>
+{% endblock %}

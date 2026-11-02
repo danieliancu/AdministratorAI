@@ -1,7 +1,8 @@
-{% extends "base_platform.html" %}
+{% extends "base_platform.html" %}{% load money %}
 {% block title %}Utilizare AI{% endblock %}
 {% block content %}
 <h1>Utilizare AI</h1>
+{% include "platform/_rate_notice.html" %}
 {% if uncertain %}
 <section class="card" style="margin-bottom:1rem">
   <h2>Rezervări cu rezultat necunoscut</h2>
@@ -14,14 +15,14 @@
         <tr>
           <td>{{ r.tenant_name }}</td>
           <td>{{ r.operation_id }}</td>
-          <td>{{ r.max_cost|floatformat:6 }} {{ r.currency }}</td>
+          <td>{% ron r.max_cost r.currency rate %}</td>
           <td>{{ r.failure_reason|default:"proces întrerupt" }}</td>
           <td>{{ r.created_at|date:"d.m.Y H:i" }}</td>
           {% if can_manage %}
           <td>
             <form method="post" action="{% url 'platform:ai-resolve' r.id %}" style="display:flex;gap:.4rem;flex-wrap:wrap">
               {% csrf_token %}
-              <input name="actual" inputmode="decimal" placeholder="Cost real" aria-label="Cost real pentru {{ r.tenant_name }}" style="width:7rem;padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
+              <input name="actual" inputmode="decimal" placeholder="Cost real, USD" aria-label="Cost real pentru {{ r.tenant_name }}" style="width:7rem;padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
               <input name="reason" required maxlength="500" placeholder="Motiv" aria-label="Motiv pentru {{ r.tenant_name }}" style="padding:.35rem .5rem;border:1px solid #c5cedb;border-radius:6px;font:inherit">
               <button class="btn btn-secondary" type="submit">Rezolvă</button>
             </form>
@@ -44,9 +45,9 @@
       {% for u in usage %}
         <tr>
           <td>{{ u.tenant_name }}</td>
-          <td>{{ u.spent|floatformat:6 }} {{ u.currency }}{% if u.highest_threshold %} <span class="badge">{{ u.highest_threshold }}% din buget</span>{% endif %}</td>
-          <td>{{ u.reserved|floatformat:6 }} {{ u.currency }}</td>
-          <td>{{ u.monthly_limit|floatformat:4 }} {{ u.currency }}{% if u.overage_authorised %} <span class="badge">depășire autorizată</span>{% endif %}</td>
+          <td>{% ron u.spent u.currency rate %}{% if u.highest_threshold %} <span class="badge">{{ u.highest_threshold }}% din buget</span>{% endif %}</td>
+          <td>{% ron u.reserved u.currency rate %}</td>
+          <td>{% ron u.monthly_limit u.currency rate %}{% if u.overage_authorised %} <span class="badge">depășire autorizată</span>{% endif %}</td>
           <td>{{ u.requests }}</td>
           {% if can_manage %}<td><a href="{% url 'platform:ai-policy' u.tenant_id %}">Modifică</a></td>{% endif %}
         </tr>

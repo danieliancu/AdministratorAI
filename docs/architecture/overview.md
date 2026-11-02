@@ -18,6 +18,7 @@ Administrator AI is a Django modular monolith. Pages are server-rendered, with H
 | `apps.inventory` | Products and append-only stock movements |
 | `apps.financial_imports` | CSV and Excel previews, deduplication, original rows |
 | `apps.reports` | Every calculated figure, the dashboard, reports and exports. See [figures](../financial/figures.md) |
+| `apps.assistant` | Questions and checked answers. See [assistant](../ai/assistant.md) |
 
 ## Request flow
 

@@ -94,3 +94,15 @@ Header totals cover the dashboard and reports. Lines add tax treatment per line 
 ## Recurring expenses are generated on request
 
 Nothing appears in a firm's figures unless someone asked for it. A scheduled task would record expenses that may no longer be real, so the dashboard reminds instead.
+
+## The model explains, the application counts
+
+The figures an assistant shows come from the same code as the reports. The model picks among them by id, and any number it writes must already be in its inputs, or its text is withheld. This costs some good answers, such as a rounded figure, and that is the right trade for a financial product.
+
+## The assistant runs in the worker
+
+Only the worker holds the provider key, so a question is a queued task and the page polls for the answer. This also means no web process waits on a slow provider.
+
+## AI amounts in lei, enforcement in USD
+
+The provider bills in USD, so limits are enforced in USD and exchange rate moves cannot make a reservation wrong. Lei are for reading. Limits typed in lei are converted once, when saved, so their value in lei drifts with the rate.

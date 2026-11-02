@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.assistant.urls import urlpatterns as assistant_urls
 from apps.expenses.urls import urlpatterns as expense_urls
 from apps.financial_imports.urls import urlpatterns as import_urls
 from apps.inventory.urls import urlpatterns as inventory_urls
@@ -24,4 +25,5 @@ tenant_urlpatterns = [
     *inventory_urls,
     *import_urls,
     *report_urls,
+    *assistant_urls,
 ]

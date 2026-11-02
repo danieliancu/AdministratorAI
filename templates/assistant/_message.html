@@ -1,0 +1,56 @@
+<details class="message" id="message-{{ message.pk }}"{% if message.is_open or message.is_pending %} open{% endif %}{% if message.is_pending %}
+         hx-get="{% url 'tenant:assistant-message' request.tenant_access.tenant_id message.pk %}"
+         hx-trigger="every 2s" hx-swap="outerHTML"{% endif %} aria-live="polite">
+  <summary>
+    <svg class="icon" aria-hidden="true"><use href="#{% if message.status == 'failed' %}i-alert{% elif message.citations %}i-scale{% elif message.used_fact_ids %}i-chart{% else %}i-info{% endif %}"/></svg>
+    <span class="question">{{ message.question }}</span>
+    <span class="message-meta small muted">{{ message.created_at|date:"H:i" }}</span>
+  </summary>
+  <div class="message-body">
+    {% if message.is_pending %}
+    <p class="muted with-icon" role="status"><span class="spinner" aria-hidden="true"></span>Se pregătește răspunsul…</p>
+    {% elif message.status == 'failed' %}
+    <div class="alert alert-error" role="alert">{{ message.failure_text }}</div>
+    {% else %}
+    {% if message.is_synthetic %}<div class="alert alert-warning" role="status">Răspuns sintetic de la furnizorul de test, nu un rezultat AI real.</div>{% endif %}
+    {% if message.grounding_failed %}<div class="alert alert-warning" role="status">{{ message.answer_text }}</div>{% else %}<p class="answer">{{ message.answer_text|linebreaksbr }}</p>{% endif %}
+    {% if message.period_start and message.used_facts %}<p class="with-icon small muted"><svg class="icon"><use href="#i-calendar"/></svg>Perioada: {{ message.period_start|date:"d.m.Y" }} – {{ message.period_end|date:"d.m.Y" }}</p>{% endif %}
+    {% if message.used_facts %}
+    <section class="answer-part">
+      <h4 class="with-icon"><svg class="icon"><use href="#i-chart"/></svg>Cifre calculate de aplicație</h4>
+      <div class="table-wrap"><table>
+        <tbody>{% for fact in message.used_facts %}<tr><td>{{ fact.label }}{% if fact.note %}<br><span class="small muted">{{ fact.note }}</span>{% endif %}</td><td class="num">{{ fact.value }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </section>
+    {% endif %}
+    {% if message.citations %}
+    <section class="answer-part">
+      <h4 class="with-icon"><svg class="icon"><use href="#i-scale"/></svg>Surse citate</h4>
+      <ul class="citations">
+        {% for c in message.citations %}
+        <li>
+          <strong>{{ c.citation }}</strong>{% if c.article %}, {{ c.article }}{% endif %}{% if c.paragraph %}, {{ c.paragraph }}{% endif %} <span class="badge">{{ c.authority }}</span><br>
+          {{ c.title }}<br>
+          <span class="small muted">Aplicabil de la {{ c.valid_from }}{% if c.valid_to %} până la {{ c.valid_to }}{% endif %}. Preluat la {{ c.retrieved_at }}.</span>
+          {% if c.official_url %}<a class="small with-icon inline-link" href="{{ c.official_url }}" rel="noopener noreferrer" target="_blank"><svg class="icon"><use href="#i-link"/></svg>Sursa oficială</a>{% endif %}
+          {% for w in c.warnings %}<br><span class="small">{{ w }}</span>{% endfor %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    {% if message.actions %}
+    <section class="answer-part">
+      <h4 class="with-icon"><svg class="icon"><use href="#i-check"/></svg>Ce poți verifica</h4>
+      <ul class="plain-list">{% for item in message.actions %}<li>{{ item }}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+    {% if message.assumptions or message.limitations %}
+    <details class="answer-part notes">
+      <summary class="with-icon"><svg class="icon"><use href="#i-info"/></svg>Presupuneri și limite</summary>
+      <ul class="plain-list small muted">{% for item in message.assumptions %}<li>{{ item }}</li>{% endfor %}{% for item in message.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+    {% endif %}
+  </div>
+</details>

@@ -164,7 +164,7 @@ Needs a legal review of reuse terms before commercial use. Portal Legislativ's t
 | Browser, superadmin legal pages | Passed |
 | `pip-audit` on `requirements.lock` | No known vulnerabilities |
 
-Real data in the development database: 3 acts and 6 documents. No large corpus was downloaded, and every source remains disabled.
+Real data in the development database: 4 acts, of which 3 are usable, and 9 documents, of which 5 are ANAF press releases. No large corpus was downloaded, and every source remains disabled.
 
 ### Defects found by running
 

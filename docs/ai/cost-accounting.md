@@ -73,7 +73,13 @@ Prices must come from the provider's official price list. None are bundled, beca
 docker compose run --rm migrate python manage.py set_ai_model_price --provider openai --model <name> --input <n> --cached-read <n> --cache-write-30m <n> --cache-write-12h <n> --output <n> --currency USD --effective-from <ISO date> --source-url <official page>
 ```
 
-Then point an operation's `default_model` at the model, put `OPENAI_API_KEY` in `.env`, and enable the firm in `/platform/ai/`. Assigning a model to an operation has no command yet, except for the development seed.
+Then choose the model for an operation, put `OPENAI_API_KEY` in `.env`, and enable the firm in `/platform/ai/`:
+
+```powershell
+docker compose run --rm migrate python manage.py set_ai_operation_model --operation <key> --model openai:<name>
+```
+
+The command refuses a model with no price in force. Running `seed_ai_dev` afterwards points `diagnostic.echo` back at the fake provider.
 
 To test the path end to end, `docker compose exec web python manage.py run_ai_diagnostic <login>` queues one request for that member's firm. It is charged to the firm's budget, and a real provider will bill for it.
 
@@ -83,7 +89,6 @@ To test the path end to end, `docker compose exec web python manage.py run_ai_di
 
 ## Not built yet
 
-- A first real provider call.
 - GBP and RON reporting. The `AIExchangeRate` table exists but has no way to enter rates and no pages use it, so costs appear in USD only.
 - Contribution margin, which needs revenue from Milestone 7.
 - Email for budget alerts. They appear only on the superadmin's AI usage page.

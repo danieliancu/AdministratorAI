@@ -71,7 +71,7 @@ Each of these passed the unit tests at the time, and a regression test now cover
 - Platform "Create tenant" requires the owner to already have an account.
 - The landing page has no photographs: the ones in the design reference are not usable assets.
 - The price on the landing page is provisional text from the design reference.
-- CI first ran after the repository reached GitHub on 2 November 2026, and failed. See Milestone 5.
+- CI first ran after the repository reached GitHub on 2 November 2026. See Milestone 5.
 - `mypy` is not configured.
 - Docker Desktop lists Windows 10 22H2 only while it is within Microsoft's servicing timeline, so this machine may stop receiving updates.
 
@@ -121,7 +121,6 @@ Buildable and testable with a fake provider. Real calls need an OpenAI API key.
 See "Not built yet" in the [cost accounting](ai/cost-accounting.md) document. Also:
 
 - A prompt template change needs a data migration; there is no management page.
-- Assigning a model to an operation has no command outside the development seed.
 - Denied requests are written to the tenant's audit log even when the caller is not a member, so a signed-in non-member calling code directly could add noise there. No page lets them do so today.
 
 ### Remaining dependencies
@@ -224,7 +223,7 @@ Built before Milestone 4, which needs a fiscal specialist before any rule can be
 | `ruff check` | Clean |
 | `makemigrations --check` | No changes |
 | `pip-audit` on `requirements.lock` | No known vulnerabilities |
-| GitHub Actions | **Failing at the last run.** See below |
+| GitHub Actions | All steps passed on `master` |
 
 ### Defects found by running
 
@@ -235,7 +234,7 @@ Built before Milestone 4, which needs a fiscal specialist before any rule can be
 
 ### CI
 
-The first runs on GitHub failed at the lint step, with exit code 2. Reproduced locally: the container user cannot write to a checkout owned by the runner's user, so `ruff` cannot create its cache. The workflow now opens the permissions first. **This fix has not run on GitHub yet, and the steps after lint have never run there.**
+The first runs on GitHub failed at the lint step, with exit code 2. Reproduced locally: the container user cannot write to a checkout owned by the runner's user, so `ruff` cannot create its cache. The workflow now opens the permissions first, and every step has since passed on GitHub: lint, tests, migrations, `pip-audit` and `gitleaks`.
 
 ### Security considerations
 
@@ -256,3 +255,22 @@ See [financial figures](financial/figures.md). The main ones: invoices have no l
 ### Next: Milestone 4, tax rules engine
 
 Needs a fiscal specialist before any rule can become active. Milestone 6, the assistant, needs an OpenAI key and can use these figures.
+
+## First real AI provider call
+
+On 2 November 2026 one `diagnostic.echo` request went through the whole path, page aside: command, Redis, worker, gateway, OpenAI.
+
+| Check | Result |
+|---|---|
+| Model | `gpt-6-luna`, at the official price checked that day |
+| Answer | „Testul de diagnostic a reușit.”, marked as not synthetic |
+| Usage | 71 input and 35 output tokens, of which 19 were reasoning |
+| Held before the call | $0.0000885 |
+| Actual cost | $0.0000246, matching the hand calculation |
+| Key | In the worker only, not in `web` |
+
+**Reasoning counts as output.** More than half of this answer's output tokens were reasoning, so an operation's `max_output_tokens` must allow for it, or an answer can stop short. Milestone 6 must set this per operation.
+
+The demo firm's budget of $0.05 also holds $0.00027 from earlier fake-provider tests, because synthetic usage is charged to the same budget. This affects only the development database.
+
+Not done: real embeddings for the legal corpus, reconciliation against OpenAI's own usage figures, and any operation other than the diagnostic.

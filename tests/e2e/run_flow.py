@@ -118,8 +118,9 @@ def finance_flow(page, run):
     page.screenshot(path=SHOTS / "finance-dashboard.png", full_page=True)
 
     page.set_viewport_size({"width": 400, "height": 800})
+    firm = page.url.split("/t/")[1].split("/")[0]
     for route in ("", "vanzari/", "cheltuieli/", "stocuri/", "importuri/", "rapoarte/"):
-        page.goto(page.url.split("/t/")[0] + "/t/" + page.url.split("/t/")[1].split("/")[0] + "/" + route)
+        page.goto(f"{BASE}/t/{firm}/{route}")
         overflow = page.evaluate(
             "document.documentElement.scrollWidth - document.documentElement.clientWidth"
         )

@@ -1,7 +1,5 @@
 from django.urls import path
 
-from apps.ai_gateway import views as ai_views
-
 from . import views
 
 account_urlpatterns = [
@@ -15,6 +13,4 @@ tenant_urlpatterns = [
     path("profil-fiscal/", views.fiscal_profile, name="fiscal-profile"),
     path("membri/", views.members, name="members"),
     path("setari/", views.tenant_settings, name="settings"),
-    path("consum-ai/", ai_views.usage, name="ai-usage"),
-    path("consum-ai/test/", ai_views.run_test, name="ai-test"),
 ]

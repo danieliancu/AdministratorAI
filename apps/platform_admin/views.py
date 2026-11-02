@@ -7,7 +7,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from . import ai_services, services
-from .access import MANAGE, VIEW, requires_platform
+from .access import MANAGE, VIEW, VIEW_AI_COSTS, requires_platform
 from .forms import AIPolicyForm, ReconciliationForm, TenantCreateForm, TenantStatusForm
 
 PAGE_SIZE = 25
@@ -93,7 +93,7 @@ def audit_log(request):
     return render(request, "platform/audit.html", {"page": _page(request, services.audit_log())})
 
 
-@requires_platform(VIEW)
+@requires_platform(VIEW_AI_COSTS)
 def ai_usage(request):
     return render(
         request,
@@ -107,7 +107,7 @@ def ai_usage(request):
     )
 
 
-@requires_platform(VIEW)
+@requires_platform(VIEW_AI_COSTS)
 def ai_costs(request):
     return render(
         request,
@@ -121,7 +121,7 @@ def ai_costs(request):
     )
 
 
-@requires_platform(MANAGE)
+@requires_platform(VIEW_AI_COSTS)
 def ai_policy(request, tenant_id):
     current = ai_services.tenant_usage_one(tenant_id)
     initial = {name: current[name] for name in POLICY_FIELDS} if current else {}
@@ -136,7 +136,7 @@ def ai_policy(request, tenant_id):
 
 
 @require_POST
-@requires_platform(MANAGE)
+@requires_platform(VIEW_AI_COSTS)
 def ai_resolve(request, reservation_id):
     reason = request.POST.get("reason", "").strip()
     raw = request.POST.get("actual", "").strip()
@@ -151,7 +151,7 @@ def ai_resolve(request, reservation_id):
 
 
 @require_POST
-@requires_platform(MANAGE)
+@requires_platform(VIEW_AI_COSTS)
 def ai_reconcile(request):
     form = ReconciliationForm(request.POST)
     if not form.is_valid():

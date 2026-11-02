@@ -44,7 +44,11 @@ class AIPolicyForm(forms.Form):
     allowed_operations = forms.MultipleChoiceField(
         label="Operații permise", widget=forms.CheckboxSelectMultiple, required=False
     )
-    reason = forms.CharField(label="Motiv", max_length=500, help_text=REASON_HELP)
+    reason = forms.CharField(
+        label="Motiv",
+        max_length=500,
+        help_text="Se păstrează în jurnalul de audit al platformei. Firma nu îl vede.",
+    )
 
     def __init__(self, *args, catalog, **kwargs):
         super().__init__(*args, **kwargs)

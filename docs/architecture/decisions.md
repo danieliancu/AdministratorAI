@@ -50,3 +50,7 @@ Inside a tenant scope, the ORM can read colleagues' password hashes, because `ac
 ## `SECURE_HSTS_PRELOAD` off
 
 Joining browser preload lists is hard to undo, so it should be decided on the final domain.
+
+## AI consumption is visible to the superadmin only
+
+A product decision: firms do not see their own AI consumption, costs, limits or alerts, and neither does the Support role. Platform actions on AI policy therefore write no tenant-visible audit event, unlike tenant suspension. `aai_app` must still read budget and usage tables to enforce limits, so this is enforced by routes and capabilities, not by the database. When the assistant is built in Milestone 6, its refusal messages must not reveal amounts or limits.

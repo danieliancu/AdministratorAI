@@ -4,7 +4,12 @@ from .services import _rows
 
 
 def tenant_usage():
-    return _rows("SELECT * FROM platform.ai_tenant_usage ORDER BY spent DESC, tenant_name")
+    return _rows(
+        """SELECT u.*, a.highest_threshold
+           FROM platform.ai_tenant_usage u
+           LEFT JOIN platform.ai_alerts a ON a.tenant_id = u.tenant_id
+           ORDER BY u.spent DESC, u.tenant_name"""
+    )
 
 
 def tenant_usage_one(tenant_id):

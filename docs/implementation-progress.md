@@ -94,7 +94,7 @@ Buildable and testable with a fake provider. Real calls need an OpenAI API key.
 - Atomic budget reservations, firm and per-user limits, per-request caps, rate limits, overage only when authorised, and alerts at 70, 90 and 100 percent.
 - Idempotent requests, tenant-isolated exact-match caching, and bounded retries.
 - Conservative handling of uncertain outcomes, with audited resolution by staff.
-- Tenant page "Consum AI", and platform pages for usage, costs, policies, uncertain reservations and reconciliation.
+- Superadmin-only pages for usage, costs, alerts, policies, uncertain reservations and reconciliation. Firms and Support see no AI consumption, by product decision.
 
 ### Migrations
 

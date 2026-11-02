@@ -44,7 +44,7 @@
       {% for u in usage %}
         <tr>
           <td>{{ u.tenant_name }}</td>
-          <td>{{ u.spent|floatformat:6 }} {{ u.currency }}</td>
+          <td>{{ u.spent|floatformat:6 }} {{ u.currency }}{% if u.highest_threshold %} <span class="badge">{{ u.highest_threshold }}% din buget</span>{% endif %}</td>
           <td>{{ u.reserved|floatformat:6 }} {{ u.currency }}</td>
           <td>{{ u.monthly_limit|floatformat:4 }} {{ u.currency }}{% if u.overage_authorised %} <span class="badge">depășire autorizată</span>{% endif %}</td>
           <td>{{ u.requests }}</td>

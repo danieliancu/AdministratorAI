@@ -2,6 +2,8 @@
 
 **Implemented and tested with a fake provider. No real AI provider has ever been called**, because no API key is configured. The OpenAI adapter has only been run against simulated HTTP responses shaped like the documentation.
 
+**Visibility:** only a platform superadmin sees AI consumption, costs, limits and alerts. Firms and the Support role see none of it, by product decision.
+
 ## Using the gateway
 
 All AI goes through `apps.ai_gateway.gateway.execute(AIRequest(...))`. A test fails if any other module imports a provider SDK. The API key is held only by the `worker` service.
@@ -73,6 +75,8 @@ docker compose run --rm migrate python manage.py set_ai_model_price --provider o
 
 Then point an operation's `default_model` at the model, put `OPENAI_API_KEY` in `.env`, and enable the firm in `/platform/ai/`. Assigning a model to an operation has no command yet, except for the development seed.
 
+To test the path end to end, `docker compose exec web python manage.py run_ai_diagnostic <login>` queues one request for that member's firm. It is charged to the firm's budget, and a real provider will bill for it.
+
 ## Development
 
 `docker compose run --rm migrate python manage.py seed_ai_dev` installs a fake provider with invented prices and enables it for the demo firm, and it refuses to run unless the fake provider is allowed. Fake answers are marked `is_synthetic` and labelled on every page. Production settings do not allow the fake provider.
@@ -82,7 +86,7 @@ Then point an operation's `default_model` at the model, put `OPENAI_API_KEY` in 
 - A first real provider call.
 - GBP and RON reporting. The `AIExchangeRate` table exists but has no way to enter rates and no pages use it, so costs appear in USD only.
 - Contribution margin, which needs revenue from Milestone 7.
-- Email for budget alerts. They appear on the firm's AI page only.
+- Email for budget alerts. They appear only on the superadmin's AI usage page.
 - Semantic caching. Only exact-match caching exists.
 - A provider adapter other than OpenAI.
 - Automatic reconciliation. Staff enter the provider's figure by hand.

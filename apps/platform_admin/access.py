@@ -2,9 +2,10 @@ from dataclasses import dataclass
 
 VIEW = "view"
 MANAGE = "manage"
+VIEW_AI_COSTS = "view_ai_costs"
 
 CAPABILITIES = {
-    "superadmin": {VIEW, MANAGE},
+    "superadmin": {VIEW, MANAGE, VIEW_AI_COSTS},
     "support": {VIEW},
 }
 
@@ -12,6 +13,10 @@ CAPABILITIES = {
 @dataclass(frozen=True)
 class PlatformAccess:
     role: str
+
+    @property
+    def can_view_ai_costs(self):
+        return self.can(VIEW_AI_COSTS)
 
     def can(self, capability):
         return capability in CAPABILITIES[self.role]

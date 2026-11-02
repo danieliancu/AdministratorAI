@@ -10,10 +10,10 @@ from apps.ai_gateway import tasks
 from apps.ai_gateway.gateway import AIGateway, AIOutcomeUnknown
 from apps.ai_gateway.models import AIBudget, AIBudgetPolicy, AIUsageReservation
 from apps.ai_gateway.providers.base import ProviderOutcomeUnknown
-from apps.ai_gateway.providers.fake import SYNTHETIC_TEXT, FakeAdapter
+from apps.ai_gateway.providers.fake import FakeAdapter
 from apps.audit.models import TenantEvent
 from apps.core.db.scope import db_scope
-from apps.platform_admin import ai_services
+from apps.platform_admin import ai_services, services
 from apps.tenants.roles import Role
 from tests.factories import make_tenant, make_user
 
@@ -68,7 +68,7 @@ def uncertain_reservation(firm):
 
 
 class TestPolicyManagement:
-    def test_superadmin_sets_a_policy_audited_and_visible_to_the_firm(
+    def test_superadmin_sets_a_policy_audited_and_hidden_from_the_firm(
         self, committed_db, ai_catalog, owner_connection
     ):
         staff, owner = make_user(), make_user()
@@ -77,8 +77,9 @@ class TestPolicyManagement:
         ai_services.set_policy(staff.pk, tenant.pk, reason="plan Start", **policy_fields())
         with db_scope(tenant_id=tenant.pk, user_id=owner.pk):
             assert AIBudgetPolicy.objects.get().monthly_limit == Decimal("5")
-            mirror = TenantEvent.objects.get(action="platform.ai.policy.updated")
-        assert mirror.metadata["reason"] == "plan Start"
+            assert not TenantEvent.objects.filter(action__contains="ai.").exists()
+        logged_actions = [row["action"] for row in services.audit_log()]
+        assert "ai.policy.updated" in logged_actions
         logged = [
             r for r in ai_services.tenant_usage() if r["tenant_id"] == tenant.pk
         ]
@@ -155,7 +156,7 @@ class TestUncertainReservations:
         with db_scope(tenant_id=tenant.pk, user_id=user.pk):
             budget = AIBudget.objects.get()
             assert AIUsageReservation.objects.get().status == "committed"
-            assert TenantEvent.objects.filter(
+            assert not TenantEvent.objects.filter(
                 action="platform.ai.reservation.resolved"
             ).exists()
         assert budget.reserved == 0
@@ -210,43 +211,65 @@ class TestReconciliation:
 
 
 class TestPages:
-    def test_tenant_page_shows_consumption(self, firm, client):
+    @pytest.mark.parametrize("role", [Role.OWNER, Role.ADMINISTRATOR, Role.ACCOUNTANT])
+    def test_no_firm_role_sees_ai_consumption(self, firm, client, role):
+        tenant, owner = firm
         AIGateway(sleep=lambda s: None, adapter=ScriptedAdapter(usage_result())).execute(
             request_for(firm)
         )
-        sign_in(client, firm[1])
-        response = client.get(reverse("tenant:ai-usage", args=[firm[0].pk]))
-        assert response.status_code == 200
-        content = response.content.decode()
-        assert "Consum AI" in content
-        assert "Ultimele cereri" in content
-
-    def test_a_firm_without_ai_says_so(self, committed_db, ai_catalog, client):
-        user = make_user()
-        tenant = make_tenant(user)
+        user = owner if role == Role.OWNER else add_member(tenant, owner, role)
         sign_in(client, user)
-        content = client.get(reverse("tenant:ai-usage", args=[tenant.pk])).content.decode()
-        assert "nu este activat" in content
+        pages = ("tenant:dashboard", "tenant:settings", "tenant:members")
+        for name in pages:
+            response = client.get(reverse(name, args=[tenant.pk]))
+            if response.status_code == 403:
+                continue
+            content = response.content.decode()
+            assert "Consum AI" not in content
+            assert "USD" not in content
+            assert "tokeni" not in content.lower()
+        assert client.get(f"/t/{tenant.pk}/consum-ai/").status_code == 404
 
-    def test_a_member_cannot_see_the_costs(self, firm, client):
-        tenant, owner = firm
-        member = add_member(tenant, owner, Role.MEMBER)
-        sign_in(client, member)
-        assert client.get(reverse("tenant:ai-usage", args=[tenant.pk])).status_code == 403
-
-    def test_another_tenants_page_is_not_found(self, firm, client):
-        stranger = make_user()
-        make_tenant(stranger)
-        sign_in(client, stranger)
-        assert client.get(reverse("tenant:ai-usage", args=[firm[0].pk])).status_code == 404
-
-    def test_synthetic_answers_are_labelled(self, firm, client, settings):
-        settings.AAI_ALLOW_FAKE_AI = True
-        AIGateway(sleep=lambda s: None, adapter=FakeAdapter()).execute(request_for(firm))
+    def test_firm_members_cannot_reach_the_platform_ai_pages(self, firm, client):
         sign_in(client, firm[1])
-        content = client.get(reverse("tenant:ai-usage", args=[firm[0].pk])).content.decode()
-        assert SYNTHETIC_TEXT in content
-        assert "sintetic" in content
+        for name in ("platform:ai-usage", "platform:ai-costs"):
+            assert client.get(reverse(name)).status_code == 404
+
+    def test_support_cannot_see_ai_costs(self, firm, owner_connection, client):
+        staff = make_user()
+        grant(owner_connection, staff, "support")
+        sign_in(client, staff)
+        content = client.get(reverse("platform:overview")).content.decode()
+        assert "Costuri AI" not in content
+        assert client.get(reverse("platform:ai-usage")).status_code == 403
+        assert client.get(reverse("platform:ai-costs")).status_code == 403
+        assert client.get(reverse("platform:ai-policy", args=[firm[0].pk])).status_code == 403
+
+    def test_superadmin_sees_budget_alerts(self, committed_db, ai_catalog, set_policy,
+                                           owner_connection, client):
+        staff, owner = make_user(), make_user()
+        tenant = make_tenant(owner)
+        grant(owner_connection, staff)
+        set_policy(tenant, monthly_limit=Decimal("0.00005"), overage_authorised=True,
+                   overage_limit=Decimal("1"), max_output_tokens=10)
+        AIGateway(
+            sleep=lambda s: None,
+            adapter=ScriptedAdapter(usage_result(input_tokens=0, output_tokens=10)),
+        ).execute(request_for((tenant, owner)))
+        sign_in(client, staff)
+        content = client.get(reverse("platform:ai-usage")).content.decode()
+        assert "70% din buget" in content
+
+    def test_diagnostic_command_uses_the_gateway_for_a_member(self, firm, monkeypatch):
+        from django.core.management import call_command
+
+        from apps.ai_gateway.management.commands import run_ai_diagnostic
+
+        sent = []
+        monkeypatch.setattr(run_ai_diagnostic, "enqueue", lambda task, **kw: sent.append(kw))
+        call_command("run_ai_diagnostic", firm[1].email, verbosity=0)
+        assert len(sent) == 1
+        assert sent[0]["note"]
 
     def test_platform_pages_work_and_hide_answers(self, firm, owner_connection, client):
         staff = make_user()
@@ -295,7 +318,7 @@ class TestPages:
         grant(owner_connection, staff, "support")
         sign_in(client, staff)
         assert client.get(reverse("platform:ai-policy", args=[tenant.pk])).status_code == 403
-        assert client.get(reverse("platform:ai-usage")).status_code == 200
+        assert client.get(reverse("platform:ai-usage")).status_code == 403
 
 
 class TestProviderSelection:
